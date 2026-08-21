@@ -7,40 +7,46 @@ ritual.
 ## Where the pattern comes from
 
 The source corpus (see [what-the-numbers-say.md](what-the-numbers-say.md) for
-the setting) contains three generations of briefing documents, counted
-2026-08-21 with first-git-commit dates as the chronology proxy:
+the setting) contains three generations of briefing documents. The cohorts:
+82 first-generation "goal files" (by filename prefix), plus the 85 briefs
+split by first-git-commit date into 19 early briefs (June–July 2026) and 66
+chain-era briefs (August 2026) — so the table below spans 167 documents, of
+which the 85 briefs are the pattern's carriers. Counted 2026-08-21. Only
+rows whose counting rule is a one-line grep over `## `-level headings are
+printed; an earlier version of this table carried classifier-dependent rows
+that an independent reproduction could not confirm, so they are gone:
 
-| Section class | Gen 1 "goal files" (May, n=82) | Gen 2 early briefs (Jun–Jul, n=19) | Gen 3 chain briefs (Aug, n=66) |
+| Row (counting rule) | Gen 1 (n=82) | Gen 2 (n=19) | Gen 3 (n=66) |
 |---|---|---|---|
-| Mission | 0 | 10 | 40 |
-| Non-goals / OUT | 6 | 10 | 45 |
-| Gate (done-criteria) | 10 | 0 | 48 |
-| Guardrails | 0 | 0 | 43 |
-| Completion protocol | 26 | 1 | 49 |
-| Chain handoff / loop | 6 | 11 | 54* |
-| Trap catalog | 0 | 0 | 26 |
-| Measured baseline | 12 | 0 | 31 |
-| Owner decisions | 0 | 0 | 24 |
-| Median size | 15.5 KB | 6.9 KB | 19.2 KB |
-
-\* loop (31) and handoff (23) counted as separate classes; overlap possible.
+| Guardrails section (`## ` heading matching `guardrail`) | 0 | 0 | 43 |
+| Trap-catalog section (matching `fallen`/`fallstricke`) | 0 | 0 | 26 |
+| Owner-decisions section (matching `owner-entscheidung`) | 0 | 0 | 24 |
+| Median file size (`wc -c`) | 15.5 KB | 6.9 KB | 19.2 KB |
+| Median warning glyphs (`⚠` count) | 0 | 1 | 4 |
 
 Two things are visible in the numbers. First, the form *shrank* before it
 grew: generation 2 briefs are half the size of generation 1, because the
 task specification moved out of the prompt and into verified references.
-Second, the load-bearing sections of the mature form — gate, guardrails,
-non-goals, owner decisions, trap catalog — are all late crystallizations;
-none existed in the first 82 documents.
+Second, three of the mature form's defining sections — guardrails, the trap
+catalog, owner decisions — appear in zero of the 101 pre-August documents
+and in 43, 26, and 24 of the 66 August briefs. (Mission, non-goals, gate,
+and handoff sections exist across all generations under many heading
+variants; their per-generation counts depend on the classification regex,
+so this table does not claim them.)
 
 **The pivotal design change is not a section at all.** Generation 1 was
 written by a human. Generation 3 briefs are written by the *outgoing
 session* as its final deliverable, while its knowledge is fresh and
-measured. The corpus also contains the failed alternative: pre-written
-"skeleton" briefs whose expensive parts (verified paths, exact commands,
-known traps) were deferred to a "flesh out before session start" — all five
-skeletons still sit unexecuted. Top-down templates lost to bottom-up
-handoffs. That is why this repository ships a *seed* template, not a form to
-fill in per session.
+measured. The corpus also contains the instructive middle form: five
+pre-written "skeleton" briefs that deferred the expensive parts (verified
+paths, exact commands, known traps) to a "flesh out before session start".
+The sessions all ran — but not one ran a skeleton as written: each skeleton
+first had to be expanded by hand into a full brief eleven to twenty-three
+times its size (measured 2026-08-21 on the three pairs that sit side by side
+in the corpus: 4.5→49.8 KB, 3.3→76.2 KB, 3.7→64.4 KB). The skeleton saved
+nothing; the expensive work moved to an unplanned rewrite, every time.
+Top-down templates lost to bottom-up handoffs. That is why this repository
+ships a *seed* template, not a form to fill in per session.
 
 ## The ten parts
 
@@ -59,7 +65,10 @@ does, and the evidence it earned its place:
 4. **Measured baseline.** Every number with its command and date — plus the
    standing counter-rule: *re-measure your predecessor's numbers; if yours
    differ, yours win, with evidence.* In the corpus, sessions corrected
-   between two and eight inherited values per run. A brief is a claim.
+   between zero and eight inherited values per run — and the zero is the
+   interesting case: one session reported "for the first time in this chain,
+   no inherited number was wrong", the rule producing evidence of health
+   rather than busywork. A brief is a claim.
 5. **Owner decisions, fixed.** Decisions made before the session, as a
    table — plus a default for new questions: decide with reasons, implement,
    document; never stall. Measured effect: result reports carry
@@ -121,7 +130,8 @@ Measured on the same corpus — the pattern's own dead weight:
   session that tore its window carried one. Labels became useful only when
   replaced by the budget rule above.
 - **Warning-marker inflation.** Warning glyphs per brief rose from 0–1
-  (June) to 41–44 (late August). When nearly every paragraph is marked,
+  (June) to 30–44 (the six briefs of August 20–21). When nearly every
+  paragraph is marked,
   marking prioritizes nothing; no report ever cites a marker, only
   contents. Late briefs already compensate — pulling "the six traps most
   likely to cost you" ahead of the catalog — which concedes the point. This
@@ -196,8 +206,8 @@ it does not flatter.
 
 **What the literature has that this pattern lacks.** Operator controls
 (kill switch, mid-run steering), a planner/generator/evaluator role split,
-and cost governance are all better developed there. Nothing here replaces
-them; the brief pattern composes with them.
+and capped unattended loops are all better developed there. Nothing here
+replaces them; the brief pattern composes with them.
 
 ## How to adopt this
 

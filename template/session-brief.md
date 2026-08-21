@@ -10,9 +10,10 @@
   scratch before every session - that approach was tried in the corpus this
   pattern was distilled from (as pre-written "skeleton" briefs) and it
   failed: the expensive parts (verified paths, exact commands, known traps)
-  were deferred to a "before the session starts" that never happened. The
-  chain form fixes that structurally: the previous session writes the next
-  brief at the end of its own run.
+  were deferred to a pre-session expansion that then had to be done by hand,
+  every time, at eleven to twenty-three times the skeleton's size (measured).
+  The chain form fixes that structurally: the previous session writes the
+  next brief at the end of its own run.
 
   Everything in [brackets] is a placeholder. Sections marked (optional) can
   be dropped for small tasks. Keep the rest - each section exists because
@@ -72,7 +73,8 @@ the date. If a number cannot be reproduced, it does not belong here.
 **Re-measure before you rely on it.** Your predecessor's numbers are claims
 until you have reproduced them. If your measurement differs, yours wins - with
 the evidence in your result report. (In the source corpus, sessions corrected
-between two and eight inherited values per run. Plan for it.)
+between zero and eight inherited values per run. Plan for it — and treat a
+clean zero as a result worth reporting, not as wasted effort.)
 
 ## Owner decisions — fixed, not up for debate
 
