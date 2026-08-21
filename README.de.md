@@ -15,10 +15,18 @@ und 49 Ergebnisberichten:
 
 - einen **Katalog gemessener Werkzeugfallen** — als Skill installierbar,
   damit Sessions sie kennen, ohne sie auf die teure Art neu zu lernen;
-- ein **Session-Brief-Muster** für langlaufende Agenten-Ketten — die zehn
-  Bauteile, die messbar getragen haben, und die, die sich als Ritual
-  erwiesen;
+- ein **Session-Brief-Muster** für langlaufende Agenten-Ketten (ein
+  Session-Brief ist das Dokument, das einen autonomen Lauf startet — und
+  vom Lauf davor geschrieben wird) — die zehn Bauteile, die messbar
+  getragen haben, und die, die sich als Ritual erwiesen;
 - die **ehrliche Messung** dessen, was diese Methode leistet und was nicht.
+
+Der Geschmack des ganzen Katalogs, in je einer Zeile:
+
+```bash
+git grep -E 'foo\s*\('        # findet still nichts: POSIX-ERE kennt kein \s
+false | cat; echo "EXIT=$?"   # druckt 1 - und meldet dem Harness Exit 0
+```
 
 Es ist kein Framework, kein schlüsselfertiger Harness und kein Versprechen,
 dass alles besser wird. Es ergänzt Anthropics veröffentlichte
@@ -27,26 +35,33 @@ Harness-Patterns; es ersetzt sie nicht.
 <!-- section: proof -->
 ## Was wir belegen können — und was nicht
 
-Wir haben die eigene Methode vermessen, bevor wir sie veröffentlichen. Das
-Kopfergebnis stützt **nicht** die Geschichte, die man an dieser Stelle
-erwarten würde:
+Ich habe die Methode an ihrem eigenen Korpus vermessen, bevor ich sie
+veröffentliche. Belegt ist eines, schmal und nützlich: **eine mechanische
+Prüfung fängt eine reale Fehlerklasse** — veraltete Zahlen in lebenden
+Dokumenten. Sie fing vier davon in CI, nachdem eine Session sie gepusht
+hatte, und vier weitere vor einem späteren Push.
+
+Die Kopfmessung dagegen stützt **nicht** die Geschichte, die man an dieser
+Stelle erwarten würde:
 
 > Bei n = 2 Sessions nach der Harness-Optimierung ist kein Trend belegbar —
 > Welch-t ≈ 1,9, p ≈ 0,12 — und eine Session von *vor* der Optimierung lag
 > bereits unter beiden Nach-Werten.
 
-Was die Messungen *belegen*, ist schmaler und nützlicher: **eine
-mechanische Prüfung fängt eine reale Fehlerklasse** — veraltete Zahlen in
-lebenden Dokumenten. Sie fing vier davon in CI, nachdem eine Session sie
-gepusht hatte, und vier weitere vor einem späteren Push. In den Worten des
-Korpus selbst:
+Zwei ehrliche Grenzen dieser Zahl: Sie misst eine Harness-Optimierung
+*innerhalb* des Quellprojekts — nicht den Fallen-Katalog und nicht das
+Brief-Muster, die auf anderen Messungen ruhen (den Ritual-Befunden, den
+62 % Pushes ohne CI-Lauf, dem Überlauf/Schnitt-Kontrollpaar). Und die
+Statistik selbst ist eine Behauptung aus dem Quell-Korpus, deren
+zugrunde liegende Serie nie dauerhaft festgehalten wurde — im
+Zahlen-Kapitel als solche dokumentiert. In den Worten des Korpus selbst:
 
 > „Das Netz ist dichter geworden, der Fisch nicht nachweislich größer."
 >
 > „Der rote CI-Lauf belegt Kompensation, nicht Disziplin."
 
-Die vollständigen Zahlen, ihre Grundgesamtheiten und die Drift, die wir beim
-Bau dieses Repositories in unserem eigenen Auftrags-Briefing fanden:
+Die vollständigen Zahlen, ihre Grundgesamtheiten und die Drift, die beim
+Bau dieses Repositories im eigenen Auftrags-Briefing gefunden wurde:
 **[docs/what-the-numbers-say.md](docs/what-the-numbers-say.md)** (englisch).
 
 <!-- section: quickstart -->
@@ -66,9 +81,13 @@ git clone https://github.com/eduard-wolf/claude-code-harness-guardrails
 cp -r claude-code-harness-guardrails/plugin/skills/tool-traps ~/.claude/skills/
 ```
 
-(Projektlokal statt global: in `.claude/skills/` des Projekts kopieren.)
-Danach eine Session starten und sie bitten, ein `git grep` mit `\s` zu
-schreiben — sie sollte ablehnen und zu `[[:space:]]` greifen.
+(Die Marketplace-Kurzform klont standardmäßig per SSH; ohne hinterlegten
+SSH-Schlüssel vorher `CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1` setzen.
+Projektlokal statt global: in `.claude/skills/` des Projekts kopieren.)
+
+Installation deterministisch prüfen: `/plugin` listet `tool-traps` als
+installiert. Danach die Spaßprobe: die Session bitten, ein `git grep` mit
+`\s` zu schreiben — sie sollte ablehnen und zu `[[:space:]]` greifen.
 
 <!-- section: traps -->
 ## Der Fallen-Katalog
@@ -82,8 +101,9 @@ Keine erdachten Risiken. Drei Kostproben:
 - `npm run build > log 2>&1; echo "EXIT=$?"` druckt den richtigen Code —
   und meldet Harness und CI den Exit 0 des `echo`. (Falle 2)
 - Das Auto-Memory (`MEMORY.md`) wird bei 200 Zeilen / 25.000 Zeichen still
-  abgeschnitten — gemessen, einschließlich des Umstands, dass der interne
-  Name des Limits „Bytes" sagt und Zeichen meint. (Falle 13)
+  abgeschnitten — gemessen, einschließlich des Umstands, dass die Doku
+  „25KB" sagt und der interne Name des Limits „Bytes", gemeint sind
+  Zeichen. (Falle 13)
 
 Vollständiger Katalog (zugleich die Datei, die der Skill installiert):
 **[plugin/skills/tool-traps/SKILL.md](plugin/skills/tool-traps/SKILL.md)**
@@ -105,9 +125,11 @@ selbst schreibt.
 
 Der kontraintuitive Kern, im Korpus gemessen: **Das Briefing ist ein
 Ketten-Output, kein Menschen-Input.** Vorgefertigte Skeleton-Templates sind
-dort gescheitert; getragen haben Briefings, die die scheidende Session
-schreibt, solange ihr Wissen frisch und gemessen ist. Das Template hier ist
-die *Saat* für das erste Briefing, kein Formular für jede Session.
+dort gescheitert — keines wurde je so gefahren, wie es geschrieben war;
+jedes musste erst von Hand auf das Elf- bis Dreiundzwanzigfache ausgebaut
+werden. Getragen haben Briefings, die die scheidende Session schreibt,
+solange ihr Wissen frisch und gemessen ist. Das Template hier ist die
+*Saat* für das erste Briefing, kein Formular für jede Session.
 
 - Template: **[template/session-brief.md](template/session-brief.md)**
 - Durchgearbeitetes Beispiel (ESLint-8→9-Migration):
@@ -125,11 +147,16 @@ die eigene Methode auf sich selbst an, in CI, bei jedem Push:
 - **[guards/check-readme-parity.mjs](guards/check-readme-parity.mjs)** —
   README.md und README.de.md müssen dieselben Abschnitte in derselben
   Reihenfolge führen (geprüft über unsichtbare Abschnitts-Anker, nicht über
-  Prosa).
+  Prosa — Struktur-Drift wird mechanisch gefangen; ob eine Übersetzung
+  *aktuell* bleibt, bleibt Handarbeit, und das hier zu sagen ist Teil der
+  Methode).
 - **[guards/check-counts.mjs](guards/check-counts.mjs)** — jede in dieser
-  README genannte Anzahl (wie die Fallen-Zahl oben) wird gegen das Artefakt
-  selbst nachgemessen. Kein zweites Register: Der Katalog ist die einzige
-  Quelle seiner eigenen Anzahl.
+  README für den Guard *markierte* Anzahl (wie die Fallen-Zahl oben) wird
+  gegen das Artefakt selbst nachgemessen. Kein zweites Register: Der
+  Katalog ist die einzige Quelle seiner eigenen Anzahl. Die Korpus-Zahlen
+  (85 Briefings, 262 Dateien, Zeilenzahlen) sind historische Messungen mit
+  Datum und ohne Maschine — bewusst unmarkiert, weil keine Datei dieses
+  Repositories sie nachmessen kann.
 
 Beide Guards fahren zuerst ihre **Gegenprobe** (`--self-test`): Jeder
 beweist, dass er rot werden *kann*, bevor sein Grün zählt. Ein Guard ohne
@@ -140,11 +167,13 @@ Gegenprobe ist eine Behauptung.
 
 Jede Zahl in diesem Repository trägt Quelle und Grundgesamtheit — siehe
 [docs/what-the-numbers-say.md](docs/what-the-numbers-say.md). Der
-Quell-Korpus (ein solo gebautes Produktions-B2B-SaaS: ~159k Zeilen
-Anwendungs-TypeScript, ~126k Zeilen Tests; 262 Dateien in seiner
-Review-Kette) wird nicht veröffentlicht — er enthält Architektur und
-Sicherheitsbefunde eines laufenden Produkts. Veröffentlicht ist das Muster,
-nicht der Bestand.
+Quell-Korpus ist der Arbeits-Korpus von
+[wolf-agents.com](https://wolf-agents.com), einem solo gebauten
+Produktions-B2B-Security-SaaS (~190k Zeilen Anwendungs-TypeScript und
+~174k Zeilen Tests, gemessen 2026-08-21 mit der Zählregel im
+Zahlen-Kapitel; 262 Dateien in seiner Review-Kette). Der Korpus selbst
+wird nicht veröffentlicht — er enthält Architektur und Sicherheitsbefunde
+eines laufenden Produkts. Veröffentlicht ist das Muster, nicht der Bestand.
 
 Nichts hier behauptet, die Methode sei bewiesen. Belegt ist, dass eine
 Prüfung eine reale Fehlerklasse fängt; der Rest ist ein Muster mit
@@ -154,8 +183,13 @@ angehefteten Messungen — damit die Messung nachfahrbar ist.
 ## Autor, Lizenz, Status
 
 Gebaut von **Eduard Wolf** (eduard@wolf-agents.com) — destilliert aus dem
-Arbeits-Korpus eines Produktionsprojekts, das fast vollständig über
-gebriefte, autonome Claude-Code-Sessions entwickelt wurde. MIT-Lizenz.
+Arbeits-Korpus von [wolf-agents.com](https://wolf-agents.com), solo
+entwickelt und fast vollständig über gebriefte, autonome
+Claude-Code-Sessions. Die Commits hier tragen eine Claude-Co-Autor-Zeile,
+also soll die Arbeitsteilung dastehen statt anzuklingen: Die Sessions
+schrieben den Code und die Briefings; der menschliche Anteil ist die
+Methode, die Wahl dessen, was gemessen wird, das Urteil darüber, was trägt
+und was Ritual ist — und jeder Push. MIT-Lizenz.
 
 Fallen-Verifikationen sind datiert (letzter voller Durchgang: 2026-08-21).
 Werkzeuge ändern sich; reproduziert eine Falle auf deiner Version nicht

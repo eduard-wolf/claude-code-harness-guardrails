@@ -1,7 +1,8 @@
 {
   "name": "claude-code-harness-guardrails",
   "owner": {
-    "name": "Eduard Wolf"
+    "name": "Eduard Wolf",
+    "email": "eduard@wolf-agents.com"
   },
   "plugins": [
     {
@@ -9,5 +10,6 @@
       "source": "./plugin",
       "description": "Measured tool traps for Claude Code sessions: silent zero-hit greps, swallowed exit codes, empty extractions that look like results - each with a reproduction and the guard against it."
     }
-  ]
+  ],
+  "description": "Measured tool traps and session-brief guardrails for long-running Claude Code sessions."
 }

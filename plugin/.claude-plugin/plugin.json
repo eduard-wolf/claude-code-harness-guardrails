@@ -1,5 +1,14 @@
 {
   "name": "tool-traps",
   "version": "1.0.0",
-  "description": "Measured tool traps for Claude Code sessions - each with a reproduction and the guard against it."
+  "description": "Measured tool traps for Claude Code sessions - each with a reproduction and the guard against it.",
+  "author": {
+    "name": "Eduard Wolf",
+    "email": "eduard@wolf-agents.com",
+    "url": "https://wolf-agents.com"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/eduard-wolf/claude-code-harness-guardrails",
+  "repository": "https://github.com/eduard-wolf/claude-code-harness-guardrails",
+  "keywords": ["claude-code", "guardrails", "harness", "agentic", "evals", "shell", "ci"]
 }
