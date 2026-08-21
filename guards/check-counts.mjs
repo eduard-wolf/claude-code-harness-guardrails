@@ -9,7 +9,7 @@
 //
 // Mechanism: the single source of truth for "how many traps" is the traps file
 // itself (its `## `-level entries). Prose states the number as
-//     12<!-- count:traps --> traps          (bold allowed: **12**<!-- count:traps -->)
+//     N<!-- count:traps --> traps           (bold allowed: **N**<!-- count:traps -->)
 // The guard counts the artifact, finds every marker, and compares.
 //
 // Self-test (a guard without a counter-test is a claim, not a guard):

@@ -36,8 +36,10 @@ and a glob with zero matches is a hard error, not an empty list.
 
 **Verified locally 2026-08-21** (zsh 5.9): `for f in $VAR` → one item `[a b c]`
 where bash yields three; `echo before; echo *.nomatch; echo after` → `after`
-never prints. In the source corpus this combination let an `rm` behind a dead
-glob silently not run, and a stray test file got committed.
+never prints. In a non-interactive zsh *script* it is worse, not milder: the
+failed glob aborts the whole file — measured, the next line never ran and the
+script exited 1. In the source corpus this combination let an `rm` behind a
+dead glob silently not run, and a stray test file got committed.
 
 **Guard:** use arrays (`for f in ${(f)$(...)}` or `while read`), quote
 everything, and never hang a destructive or measuring command behind a glob in
@@ -57,9 +59,16 @@ piped through anything reports the pipe's exit code, not the command's.
 `EXIT=1` and exits 0. In the source corpus the harness recorded success while
 the real code stood only in the log text.
 
-**Guard:** let the measured command be the last thing on the line, or
-`exit ${PIPESTATUS[0]}`-style explicitly. If you must print, print first,
-judge second.
+**Guard:** let the measured command be the last thing on the line, or run
+under `set -o pipefail` so the pipeline reports the failure. If you read a
+stage's code explicitly, mind the shell: bash has `${PIPESTATUS[0]}`, zsh has
+`$pipestatus[1]` — the bash form expands to *empty* in zsh, and `exit` with
+an empty argument silently keeps the previous status. (Verified 2026-08-21,
+zsh 5.9: `false | cat; exit ${PIPESTATUS[0]}` exits 0, bash exits 1,
+`pipefail` exits 1. The first published version of this very guard
+recommended the bash form under a zsh stamp — a reviewer caught the guard
+re-building the trap it teaches.) If you must print, print first, judge
+second.
 
 ## 3) `2>/dev/null` on a measurement swallows the fact that it failed
 
@@ -210,14 +219,20 @@ arithmetic.
 
 ## Claude Code harness
 
-## 11) A `: ` inside an unquoted YAML value is a hard parse error — the file just never loads
+## 11) A `: ` inside an unquoted YAML value is a hard parse error — and each artifact fails differently
 
-**Symptom:** an agent or skill definition "looks right" but is never
-available ("Agent type not found"; a skill that never triggers).
+**Symptom:** an agent or skill definition "looks right" but misbehaves. An
+*agent* is simply gone ("Agent type not found"). A *skill* is sneakier: it
+works when invoked by hand and never triggers automatically.
 
 **Mechanism:** `description: Use when: always` is an illegal nested mapping
-("mapping values are not allowed in this context"). The file fails to parse;
-nothing warns at write time.
+("mapping values are not allowed in this context"); nothing warns at write
+time. The two artifact types then fail in opposite ways, per the official
+docs (code.claude.com/docs, checked 2026-08-21): a subagent file with broken
+YAML is skipped entirely ("Claude Code reads no fields from the file, skips
+it"); a SKILL.md with malformed frontmatter "loads the skill body with empty
+metadata, so `/skill-name` still works but Claude has no `description` to
+match against" — alive under manual test, dead in the mode that matters.
 
 **Verified locally 2026-08-21** (Psych/YAML): hard SyntaxError. Measured in
 the source corpus on two agent definitions (js-yaml) — both would silently
@@ -225,22 +240,32 @@ not have loaded. This file's own frontmatter quotes its description for
 exactly this reason.
 
 **Guard:** quote every frontmatter value that contains a colon; parse the
-file once (any YAML parser) before shipping it.
+file once (any YAML parser) before shipping it; for skills, test the
+*automatic* trigger, not just the slash command — and `--debug` shows the
+parse error.
 
-## 12) New agent definitions take effect at the NEXT session, not this one
+## 12) An agents directory created mid-session stays invisible until the next start
 
-**Symptom:** a session writes `.claude/agents/reviewer.md` and immediately
-gets "Agent type not found" when invoking it.
+**Symptom:** a session creates `.claude/agents/` (which did not exist when
+the session started), writes `reviewer.md` into it — and gets "Agent type
+not found" when invoking it.
 
-**Mechanism:** agent definitions are discovered at session start; a
-directory that did not exist then is not consulted mid-session. Validation
-tools check syntax, not availability.
+**Mechanism:** the file watcher covers only directories that existed at
+session start. Edits to files under an already-watched directory hot-reload
+"within a few seconds […] with no restart needed" (official docs) — the trap
+is specifically the *first* agent file in a *new* directory: "a running
+session doesn't detect a newly created `agents` directory." Validation tools
+check syntax, not availability.
 
-**Measured in the source corpus** (2026-08).
+**Measured in the source corpus** (2026-08); both halves confirmed against
+code.claude.com/docs/en/sub-agents, checked 2026-08-21. (The first published
+version of this trap over-generalized to "all new definitions need a new
+session" — narrowed after review.)
 
-**Guard:** create definitions in session N, use them from session N+1 — and
-have the brief for N+1 name them explicitly (in the measured corpus, offered-
-but-unnamed artifacts were used 0 out of 2 times).
+**Guard:** create the agents directory once, before you need it; after
+writing a scope's first agent file into a new directory, restart — and have
+the next brief name the new agents explicitly (in the measured corpus,
+offered-but-unnamed artifacts were used 0 out of 2 times).
 
 ## 13) Auto-memory is silently truncated — 200 lines, then 25,000 characters
 
@@ -248,10 +273,12 @@ but-unnamed artifacts were used 0 out of 2 times).
 context; nothing announces the cut.
 
 **Mechanism:** at load, MEMORY.md is truncated to 200 lines first, then to
-25,000 *characters* (UTF-16 units; the tool's internal name for it says
-"bytes" — measured to be characters) at the last line boundary. The excess
-is dropped silently. A warning fires at 80 % of either limit — if something
-surfaces it.
+25,000 *characters* (UTF-16 units) at the last line boundary. The excess is
+dropped silently. A warning fires at 80 % of either limit — if something
+surfaces it. Note the unit collision: the official docs state the cap as
+"the first 25KB", and the tool's internal name for the limit says bytes —
+measured, it is 25,000 UTF-16 code units, which for any non-ASCII content is
+not the same thing.
 
 **Measured in the source corpus** (extracted from the Claude Code binary
 v2.1.237 and observed in operation: an index at quota 0.885 was already
