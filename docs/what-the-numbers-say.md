@@ -5,18 +5,25 @@ measurement that fails to support the claim. This page is that measurement.
 
 ## The setting
 
-The pattern in this repository was distilled from the working corpus of a
-solo-maintained production B2B SaaS: roughly 159k lines of application
-TypeScript and 126k lines of test code, developed almost entirely through
-briefed, autonomous Claude Code sessions. Its review chain comprises 262
-files — 85 session briefs and 49 result reports among them (counted
-2026-08-21, recursively, in the corpus directory).
+The pattern in this repository was distilled from the working corpus of
+[wolf-agents.com](https://wolf-agents.com), a solo-built production B2B
+security SaaS: 189,691 lines of application TypeScript and 174,015 lines of
+test code in 433 test files (measured 2026-08-21; counting rule below),
+developed almost entirely through briefed, autonomous Claude Code sessions.
+Its review chain comprises 262 files — 85 session briefs and 49 result
+reports among them (counted 2026-08-21, recursively, in the corpus
+directory).
 
 In August 2026 a meta-chain of sessions turned the method on itself: it
 measured the harness instead of the product. The numbers below are from
 those runs. The corpus is not published — it contains the architecture and
 security findings of a live product. What is published is the pattern, and
-the numbers with their populations.
+the numbers with their populations. One framing note for the failure
+numbers: each describes a measured historical window in the source
+project's process, and each is published together with the mechanism that
+closed it — the 62 % gap with the unfiltered gate workflow, the stale
+numbers with the cross-source check, the empty coverage promises with the
+promise-measuring guard, the overflow with the budget rule.
 
 ## The headline measurement — and what it does not show
 
@@ -120,6 +127,20 @@ caught by re-measuring, which is the method:
 - A claimed "pre-series scatters by a factor of eight" could not be found in
   any persisted source — so it does not appear in this repository.
 
+A four-perspective pre-publication review (hiring-manager, developer,
+fact-checker, leak-checker) then caught five more claims in this repository
+itself that did not survive verification: an overclaim about what the counts
+guard checks ("stated" where only *marked* counts are measured), a trap
+stated more broadly than its measurement (the agents-directory trap, since
+narrowed to the documented mechanism), a guard example valid in bash but
+silently inert in the catalog's own stamped shell (`${PIPESTATUS[0]}` under
+zsh), a "skeletons sit unexecuted" claim the corpus git log refutes (the
+sessions ran — on hand-expanded briefs eleven to twenty-three times the
+skeleton's size), and a generation table whose classification rule was not
+stated and whose fragile rows an independent reproduction could not confirm.
+All five are fixed; the error class survives: **a number from a document is
+a claim — including the documents in this repository.**
+
 ## Provenance
 
 | Number | Source | Population |
@@ -131,7 +152,9 @@ caught by re-measuring, which is the method:
 | 69 promises / 3 empty / 2 narrowed | result report AA-K1 | 9 guard files at HEAD |
 | 21 own defects / 0 by reading | result report HE-3 | one session's registered defects |
 | escape-rate points 1.49 / 1.02 / 0 per 1,000 lines | result report HE-3 | changed lines in src, services, scripts per session |
+| enforced artifacts 2/2, offered 0/2 and 1/2 | meta-chain brief HE-3 | the two sessions after the HE-2 optimization |
 | corpus size 262 / 85 / 49 | counted for this repository, 2026-08-21 | recursive file count of the corpus directory |
+| 189,691 lines application TS; 174,015 lines tests in 433 files | measured for this repository, 2026-08-21 | `find src -type f \( -name '*.ts' -o -name '*.tsx' \)` excluding `__tests__/`, `*.test.*`, `*.spec.*`, `*.d.ts`, generated i18n and content collections, summed batch-safe via `cat \| wc -l`; tests = the excluded test files. Rule from the source project's metrics register (first measured 2026-07-12: 158,743 / 125,857 in 338 files — the delta is five weeks of growth) |
 
 The corpus documents themselves are not published (see The setting). Within
 the corpus, every number above carries its measuring command and date; the
