@@ -1,0 +1,13 @@
+{
+  "name": "claude-code-harness-guardrails",
+  "owner": {
+    "name": "Eduard Wolf"
+  },
+  "plugins": [
+    {
+      "name": "tool-traps",
+      "source": "./plugin",
+      "description": "Measured tool traps for Claude Code sessions: silent zero-hit greps, swallowed exit codes, empty extractions that look like results - each with a reproduction and the guard against it."
+    }
+  ]
+}

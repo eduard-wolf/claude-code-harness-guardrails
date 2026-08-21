@@ -1,0 +1,5 @@
+{
+  "name": "tool-traps",
+  "version": "1.0.0",
+  "description": "Measured tool traps for Claude Code sessions - each with a reproduction and the guard against it."
+}
