@@ -169,9 +169,9 @@ hypothetical. Condensed; populations in
 
 The pattern was developed independently against the same problem the
 Anthropic engineering posts describe. Where they overlap and where they
-differ ("effective harnesses": anthropic.com/engineering/effective-harnesses-for-long-running-agents, 2025-11-26; "harness design":
-anthropic.com/engineering/harness-design-long-running-apps, 2026-03-24;
-demo repo: github.com/anthropics/cwc-long-running-agents):
+differ ([Effective harnesses for long-running agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents),
+2025-11-26; [Harness design for long-running application development](https://www.anthropic.com/engineering/harness-design-long-running-apps),
+2026-03-24; demo repo: [anthropics/cwc-long-running-agents](https://github.com/anthropics/cwc-long-running-agents)):
 
 **Shared ground.** One bounded unit of work per session ("one feature per
 session" / one mechanism per session); handoff artifacts between sessions
