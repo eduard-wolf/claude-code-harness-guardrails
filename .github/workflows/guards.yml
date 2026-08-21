@@ -1,0 +1,23 @@
+# Runs the repository's own guards on every push and pull request.
+#
+# Deliberately no `paths:` filter: path filters are evaluated per push, not
+# per commit (see trap catalog), and these guards are cheap enough to run
+# always. Each guard runs its built-in counter-test first (--self-test):
+# a guard that cannot fail on purpose proves nothing.
+name: guards
+on:
+  push:
+  pull_request:
+
+jobs:
+  guards:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: README parity (EN/DE same sections, same order)
+        run: node guards/check-readme-parity.mjs --self-test
+      - name: Stated counts match measured counts
+        run: node guards/check-counts.mjs --self-test
