@@ -37,7 +37,7 @@ Anthropics veröffentlichte Harness-Patterns; es ersetzt sie nicht.
 <!-- section: quickstart -->
 ## Fünf Minuten
 
-Den Fallen-Katalog als Skill installieren (Claude Code ≥ 2.x):
+Den Fallen-Katalog als Skill installieren (Claude Code ≥ 2.0):
 
 ```
 /plugin marketplace add eduard-wolf/claude-code-harness-guardrails

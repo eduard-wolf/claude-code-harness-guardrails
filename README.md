@@ -36,7 +36,7 @@ with Anthropic's published harness patterns; it does not replace them.
 <!-- section: quickstart -->
 ## Five minutes
 
-Install the trap catalog as a skill (Claude Code ≥ 2.x):
+Install the trap catalog as a skill (Claude Code ≥ 2.0):
 
 ```
 /plugin marketplace add eduard-wolf/claude-code-harness-guardrails
