@@ -62,9 +62,12 @@ npx skills add eduard-wolf/claude-code-harness-guardrails
 
 That writes the catalog once to `.agents/skills/tool-traps/` and links it
 into the per-agent directories the CLI supports, Claude Code among them
-(verified 2026-08-24, project-local install). Traps 11 to 13 are the
-catalog's own "Claude Code harness" group and bound to this harness;
-everything else in it is tool-level and agent-agnostic.
+(verified 2026-08-24, skills CLI 1.5.23). It installs into the directory
+you run it in — measured the same day in one with neither `.git` nor
+`package.json`, which still landed in `./.agents/`; `-g` installs globally
+instead. Traps 11 to 14 are the catalog's own "Claude Code harness" group
+and bound to this harness; everything else in it is tool-level and
+agent-agnostic.
 
 Verify the install deterministically: `/plugin` lists `tool-traps` as
 installed. Then the fun probe: ask the session to write a `git grep` with
@@ -104,7 +107,7 @@ repository's own commissioning brief while building it:
 <!-- section: traps -->
 ## The trap catalog
 
-**14**<!-- count:traps --> traps, in six groups — every one actually hit,
+**15**<!-- count:traps --> traps, in six groups — every one actually hit,
 every one with symptom, mechanism, verification date, and the guard against
 it. No brainstormed risks. Three samples:
 
@@ -119,10 +122,10 @@ it. No brainstormed risks. Three samples:
   for the limit says "bytes" and means characters. (Trap 13)
 
 Knowing them is not the same as being safe from them: in the source
-corpus, two of these traps were hit *while the warning stood verbatim in
-the session's own brief*. Knowledge does not survive contact with
-autopilot; mechanical checks do — which is why every entry here ends in a
-guard, not in a reminder.
+corpus, two of the catalog's traps were hit *while the warning stood
+verbatim in the session's own brief*. Knowledge does not survive contact
+with autopilot; mechanical checks do — which is why every entry here ends
+in a guard, not in a reminder.
 
 Full catalog (also the file the skill installs):
 **[plugin/skills/tool-traps/SKILL.md](plugin/skills/tool-traps/SKILL.md)**.

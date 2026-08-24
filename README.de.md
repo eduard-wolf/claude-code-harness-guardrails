@@ -63,10 +63,12 @@ npx skills add eduard-wolf/claude-code-harness-guardrails
 
 Das schreibt den Katalog einmal nach `.agents/skills/tool-traps/` und
 verlinkt ihn in die Agenten-Verzeichnisse, die die CLI unterstützt, Claude
-Code darunter (verifiziert 2026-08-24, projektlokale Installation). Die
-Fallen 11 bis 13 sind die Katalog-Gruppe „Claude Code harness" und an
-diesen Harness gebunden; alles andere darin ist werkzeugnah und
-agent-agnostisch.
+Code darunter (verifiziert 2026-08-24, skills-CLI 1.5.23). Installiert
+wird in das Verzeichnis, in dem das Kommando läuft — am selben Tag in
+einem ohne `.git` und ohne `package.json` gemessen, auch dort landete es
+in `./.agents/`; `-g` installiert stattdessen global. Die Fallen 11 bis 14
+sind die Katalog-Gruppe „Claude Code harness" und an diesen Harness
+gebunden; alles andere darin ist werkzeugnah und agent-agnostisch.
 
 Installation deterministisch prüfen: `/plugin` listet `tool-traps` als
 installiert. Danach die Spaßprobe: die Session bitten, ein `git grep` mit
@@ -107,7 +109,7 @@ Bau dieses Repositories im eigenen Auftrags-Briefing gefunden wurde:
 <!-- section: traps -->
 ## Der Fallen-Katalog
 
-**14**<!-- count:traps --> Fallen in sechs Gruppen — jede real getreten,
+**15**<!-- count:traps --> Fallen in sechs Gruppen — jede real getreten,
 jede mit Symptom, Mechanismus, Verifikationsdatum und dem Guard dagegen.
 Keine erdachten Risiken. Drei Kostproben:
 
@@ -123,10 +125,10 @@ Keine erdachten Risiken. Drei Kostproben:
   Zeichen. (Falle 13)
 
 Sie zu kennen ist nicht dasselbe, wie vor ihnen sicher zu sein: Im
-Quell-Korpus wurden zwei dieser Fallen getreten, *während die Warnung
-wörtlich im Briefing der Session stand*. Wissen überlebt den Kontakt mit
-dem Autopiloten nicht; mechanische Prüfungen tun es — deshalb endet hier
-jeder Eintrag mit einem Guard, nicht mit einer Ermahnung.
+Quell-Korpus wurden zwei Fallen des Katalogs getreten, *während die
+Warnung wörtlich im Briefing der Session stand*. Wissen überlebt den
+Kontakt mit dem Autopiloten nicht; mechanische Prüfungen tun es — deshalb
+endet hier jeder Eintrag mit einem Guard, nicht mit einer Ermahnung.
 
 Vollständiger Katalog (zugleich die Datei, die der Skill installiert):
 **[plugin/skills/tool-traps/SKILL.md](plugin/skills/tool-traps/SKILL.md)**

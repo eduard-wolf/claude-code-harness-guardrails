@@ -288,11 +288,44 @@ losing content).
 storage; check `wc -lc` against 200/25,000 in a routine gate; compact at
 80 %.
 
+## 14) Multi-file `grep` and `rg` do not print files in argument order
+
+**Symptom:** a verification reads `grep -o PATTERN a.md b.md` positionally
+— "the first eight lines are `a.md`" — and silently attributes half its
+findings to the wrong file. Every matched line is correct; only the
+grouping is wrong, and it changes between identical runs of the same
+command line.
+
+**Mechanism:** in a Claude Code bash shell, `grep` and `rg` are shell
+functions from the session's shell snapshot, not the system tools: they
+run the search engines embedded in the Claude Code binary
+(`ARGV0=ugrep claude -G …`, `ARGV0=rg claude …`). `type grep` prints the
+function body; `which ugrep` finds no binary at all. The engines walk
+several files at once and print each file's block when that file is
+finished, so the order follows completion, not the command line.
+
+**Verified locally 2026-08-24** (Claude Code 2.1.241, zsh 5.9, macOS
+26.0.1): ten identical runs of `grep -o 'section: [a-z-]*' README.md
+README.de.md` printed the *second* file's block first in 4 of 10; the same
+ten runs under `rg`, in 5 of 10. Blocks stayed contiguous in all twenty
+runs — only their order moved. Ten runs each of `command -p grep`,
+`grep -J1` and `rg --sort path` held argument order 10 of 10, re-checked
+with the arguments swapped — though for this pair argument order is not
+path order, so what `--sort path` bought was determinism, not alphabetical
+order. The trap hit the baseline check of this repository's own session
+brief, where that same command line stands in the starting-state table.
+
+**Guard:** never read multi-file search output positionally. Search one
+file per command, or group by the `file:` prefix these tools already print
+when given more than one file. If a fixed order is required, use a flag
+you have measured on your own version — and `command -p grep` when you
+want the system tool rather than the harness's.
+
 ---
 
 ## Building your own checks
 
-## 14) A regex reading source code cannot tell comments from comment-lookalikes
+## 15) A regex reading source code cannot tell comments from comment-lookalikes
 
 **Symptom:** a text-based check (dead-code scan, call-site counter) is
 confidently wrong: a `/*` inside a string, a line comment, or rendered
