@@ -64,10 +64,10 @@ That writes the catalog once to `.agents/skills/tool-traps/` and links it
 into the per-agent directories the CLI supports, Claude Code among them
 (verified 2026-08-24, skills CLI 1.5.23). It installs into the directory
 you run it in — measured the same day in one with neither `.git` nor
-`package.json`, which still landed in `./.agents/`; `-g` installs globally
-instead. Traps 11 to 14 are the catalog's own "Claude Code harness" group
-and bound to this harness; everything else in it is tool-level and
-agent-agnostic.
+`package.json`, which still landed in `./.agents/`; `-g` installs
+globally instead. Traps 11 to 14<!-- trap-group: Claude Code harness = 11-14 -->
+are the catalog's own "Claude Code harness" group and bound to this
+harness; everything else in it is tool-level and agent-agnostic.
 
 Verify the install deterministically: `/plugin` lists `tool-traps` as
 installed. Then the fun probe: ask the session to write a `git grep` with
@@ -107,19 +107,19 @@ repository's own commissioning brief while building it:
 <!-- section: traps -->
 ## The trap catalog
 
-**15**<!-- count:traps --> traps, in six groups — every one actually hit,
-every one with symptom, mechanism, verification date, and the guard against
-it. No brainstormed risks. Three samples:
+**15**<!-- count:traps --> traps, in six<!-- count:trap-groups --> groups —
+every one actually hit, every one with symptom, mechanism, verification
+date, and the guard against it. No brainstormed risks. Three samples:
 
 - `description: Use when: always` is a hard YAML parse error: the agent is
   simply gone ("Agent type not found"), the skill turns zombie — alive
-  under its slash command, dead in the automatic trigger. (Trap 11)
+  under its slash command, dead in the automatic trigger. (Trap 11)<!-- trap-ref: 11 YAML -->
 - An agents directory created *mid-session* stays invisible until the next
   start — the file watcher covers only directories that existed at session
-  start. The file is written, the agent is not found. (Trap 12)
+  start. The file is written, the agent is not found. (Trap 12)<!-- trap-ref: 12 agents -->
 - Auto-memory (`MEMORY.md`) is silently truncated at 200 lines / 25,000
   characters — measured, including the fact that the tool's internal name
-  for the limit says "bytes" and means characters. (Trap 13)
+  for the limit says "bytes" and means characters. (Trap 13)<!-- trap-ref: 13 memory -->
 
 Knowing them is not the same as being safe from them: in the source
 corpus, two of the catalog's traps were hit *while the warning stood

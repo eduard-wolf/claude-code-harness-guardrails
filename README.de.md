@@ -66,7 +66,8 @@ verlinkt ihn in die Agenten-Verzeichnisse, die die CLI unterstützt, Claude
 Code darunter (verifiziert 2026-08-24, skills-CLI 1.5.23). Installiert
 wird in das Verzeichnis, in dem das Kommando läuft — am selben Tag in
 einem ohne `.git` und ohne `package.json` gemessen, auch dort landete es
-in `./.agents/`; `-g` installiert stattdessen global. Die Fallen 11 bis 14
+in `./.agents/`; `-g` installiert stattdessen global. Die Fallen
+11 bis 14<!-- trap-group: Claude Code harness = 11-14 -->
 sind die Katalog-Gruppe „Claude Code harness" und an diesen Harness
 gebunden; alles andere darin ist werkzeugnah und agent-agnostisch.
 
@@ -109,20 +110,20 @@ Bau dieses Repositories im eigenen Auftrags-Briefing gefunden wurde:
 <!-- section: traps -->
 ## Der Fallen-Katalog
 
-**15**<!-- count:traps --> Fallen in sechs Gruppen — jede real getreten,
-jede mit Symptom, Mechanismus, Verifikationsdatum und dem Guard dagegen.
-Keine erdachten Risiken. Drei Kostproben:
+**15**<!-- count:traps --> Fallen in sechs<!-- count:trap-groups --> Gruppen —
+jede real getreten, jede mit Symptom, Mechanismus, Verifikationsdatum und
+dem Guard dagegen. Keine erdachten Risiken. Drei Kostproben:
 
 - `description: Use when: always` ist ein harter YAML-Parse-Fehler: Der
   Agent ist danach schlicht weg („Agent type not found"), der Skill wird
-  zum Zombie — lebendig per Slash-Kommando, tot im Auto-Trigger. (Falle 11)
+  zum Zombie — lebendig per Slash-Kommando, tot im Auto-Trigger. (Falle 11)<!-- trap-ref: 11 YAML -->
 - Ein *mitten in der Session* angelegtes Agents-Verzeichnis bleibt bis zum
   nächsten Start unsichtbar — der Dateiwächter kennt nur Verzeichnisse, die
-  es beim Sessionstart gab. Die Datei liegt da, der Agent fehlt. (Falle 12)
+  es beim Sessionstart gab. Die Datei liegt da, der Agent fehlt. (Falle 12)<!-- trap-ref: 12 agents -->
 - Das Auto-Memory (`MEMORY.md`) wird bei 200 Zeilen / 25.000 Zeichen still
   abgeschnitten — gemessen, einschließlich des Umstands, dass die Doku
   „25KB" sagt und der interne Name des Limits „Bytes", gemeint sind
-  Zeichen. (Falle 13)
+  Zeichen. (Falle 13)<!-- trap-ref: 13 memory -->
 
 Sie zu kennen ist nicht dasselbe, wie vor ihnen sicher zu sein: Im
 Quell-Korpus wurden zwei Fallen des Katalogs getreten, *während die
