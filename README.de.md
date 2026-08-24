@@ -24,7 +24,7 @@ und 49 Ergebnisberichten:
 Der Geschmack des ganzen Katalogs, in je einer Zeile:
 
 ```bash
-git grep -E 'foo\s*\('        # findet still nichts: POSIX-ERE kennt kein \s
+git grep -E 'foo\s*\('        # still null Treffer auf macOS, trifft auf glibc
 false | cat; echo "EXIT=$?"   # druckt 1 - und meldet dem Harness Exit 0
 ```
 
@@ -71,9 +71,9 @@ in `./.agents/`; `-g` installiert stattdessen global. Die Fallen
 sind die Katalog-Gruppe „Claude Code harness" und an diesen Harness
 gebunden; alles andere darin ist werkzeugnah und agent-agnostisch.
 
-Installation deterministisch prüfen: `/plugin` listet `tool-traps` als
-installiert. Danach die Spaßprobe: die Session bitten, ein `git grep` mit
-`\s` zu schreiben — sie sollte ablehnen und zu `[[:space:]]` greifen.
+Für den Plugin-Weg: `/plugin` listet `tool-traps` als installiert. Danach
+die Spaßprobe, für jeden Weg: die Session bitten, ein `git grep` mit `\s`
+zu schreiben — sie sollte ablehnen und zu `[[:space:]]` greifen.
 
 <!-- section: proof -->
 ## Was wir belegen können — und was nicht
@@ -186,9 +186,10 @@ die eigene Methode auf sich selbst an, in CI, bei jedem Push:
   dass eine Umnummerierung die Prosa nicht still falsch stehen lassen kann.
   Dazu hält er eine unmarkierte Invariante: so viele `**Guard:**`-Zeilen im
   Katalog wie Einträge. Erst das macht „jeder Eintrag endet mit einem
-  Guard" zu einer Messung statt zu einem Versprechen. Die Korpus-Zahlen (85 Briefings, 262 Dateien, Zeilenzahlen)
-  sind historische Messungen mit Datum und ohne Maschine — bewusst
-  unmarkiert, weil keine Datei dieses Repositories sie nachmessen kann.
+  Guard" zu einer Messung statt zu einem Versprechen. Die Korpus-Zahlen
+  (85 Briefings, 262 Dateien, Zeilenzahlen) sind historische Messungen mit
+  Datum und ohne Maschine — bewusst unmarkiert, weil keine Datei dieses
+  Repositories sie nachmessen kann.
 - **[guards/verify-traps.mjs](guards/verify-traps.mjs)** — die Daten am
   Fallen-Katalog hören auf, ein Versprechen zu sein. Bei jedem Push fährt der
   Runner jede Falle nach, hinter die dieser Guard eine Probe stellen kann:

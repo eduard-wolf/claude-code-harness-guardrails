@@ -11,13 +11,13 @@ Three rules for using this catalog:
    this maintainer's machine, or both. No brainstormed risks.
 2. **Every trap carries a verification date and environment.** Tools change;
    a trap without a date is the next stale claim. If your version behaves
-   differently, the catalog is wrong for you — re-verify, then rely. In the
-   source repository, CI re-runs at each push every trap it can put a probe
-   behind — the trap form first, then the remedy against it — and names the
-   rest with number and reason, so its output, not this date, tells you which
-   of these entries were measured most recently and on what.
+   differently, the catalog is wrong for you: re-verify, then rely on it. In
+   the source repository, CI re-runs at each push every trap it can put a
+   probe behind, the trap form first and then the remedy against it, and
+   names the rest with number and reason. Its output, not this date, tells
+   you which of these entries were measured most recently and on what.
 3. **Being warned is not enough.** In the source corpus, two traps were hit
-   *while the warning stood verbatim in the session's own brief*. The guard
+   *while the warning sat verbatim in the session's own brief*. The guard
    column exists because knowledge does not survive contact with autopilot;
    mechanical checks do.
 
@@ -40,13 +40,14 @@ and a glob with zero matches is a hard error, not an empty list.
 
 **Verified locally 2026-08-21** (zsh 5.9): `for f in $VAR` → one item `[a b c]`
 where bash yields three; `echo before; echo *.nomatch; echo after` → `after`
-never prints. In a non-interactive zsh *script* it is worse, not milder: the
-failed glob aborts the whole file — measured, the next line never ran and the
-script exited 1. In the source corpus this combination let an `rm` behind a
-dead glob silently not run, and a stray test file got committed.
+never prints. In a non-interactive zsh *script* it is worse, not gentler:
+the failed glob aborts the whole file. Measured, the next line never ran and
+the script exited 1. In the source corpus this combination let an `rm`
+behind a dead glob silently fail to run, and a stray test file got
+committed.
 
 **Guard:** use arrays (`for f in ${(f)"$(...)"}` or `while read`), quote
-everything, and never hang a destructive or measuring command behind a glob in
+everything, and never put a destructive or measuring command after a glob on
 the same line.
 
 ## 2) The exit code your harness sees is the last command's — usually the `echo`
@@ -61,7 +62,7 @@ piped through anything reports the pipe's exit code, not the command's.
 
 **Verified locally 2026-08-21:** `zsh -c 'false; echo "EXIT=$?"'` prints
 `EXIT=1` and exits 0. In the source corpus the harness recorded success while
-the real code stood only in the log text.
+the real code existed only in the log text.
 
 **Guard:** let the measured command be the last thing on the line, or run
 under `set -o pipefail` so the pipeline reports the failure. If you read a
@@ -76,14 +77,14 @@ second.
 
 ## 3) `2>/dev/null` on a measurement swallows the fact that it failed
 
-**Symptom:** a search "returns zero hits" — actually it returned a usage
-error you threw away. Cousin: `head`/`tail` on a measurement silently
-truncates reality.
+**Symptom:** a search "returns zero hits", when what it actually returned
+is a usage error you threw away. Cousin: `head`/`tail` on a measurement
+silently truncates reality.
 
 **Mechanism:** discarded stderr converts "the command was wrong" into "the
-answer is zero". In the source corpus, `git grep -l PATTERN --untracked` with
-the flag after the pattern errored — read as "no matches"; and a `head -12`
-turned a measured "9 of 26" into a reported "11 of 25".
+answer is zero." In the source corpus, `git grep -l PATTERN --untracked`
+with the flag after the pattern errored and was read as "no matches"; and a
+`head -12` turned a measured "9 of 26" into a reported "11 of 25".
 
 **Guard:** never attach `2>/dev/null`, `head`, or `tail` to a command whose
 output decides anything. Read the failure; it is data.
@@ -141,8 +142,8 @@ as failure; and give every new negative check a counter-test that must fail
 
 ## 6) `git grep` without `--untracked` cannot see the files you just created
 
-**Symptom:** a freshly generated module is reported dead / absent; locally
-red, in CI green — or the reverse.
+**Symptom:** a freshly generated module is reported dead or absent; red
+locally, green in CI, or the reverse.
 
 **Mechanism:** `git grep` searches tracked content only. The files a
 refactor just created are exactly the ones it will not see. Corollary: a
@@ -163,8 +164,8 @@ narrow surface is visible instead of implied.
 ## 7) Success-counting regexes miss the failure form
 
 **Symptom:** a pipeline counts `Tests  16 passed` and silently extracts
-nothing from `Tests  1 failed | 16 passed` — precisely for the runs that are
-rightfully red.
+nothing from `Tests  1 failed | 16 passed`, precisely for the runs that are
+rightly red.
 
 **Mechanism:** the success line's shape changes when failures appear; a
 pattern written against the green form matches only green runs.
@@ -177,9 +178,9 @@ form second — and counter-test the parser on a deliberately red run.
 
 ## 8) ANSI color codes defeat your grep on tool output
 
-**Symptom:** `astro check`, and other tools that color their output, contain
-` - error ` to the eye — and `grep -E ' - error '` finds nothing, so the
-diff of error lists stays empty while the total rises.
+**Symptom:** `astro check`, and other tools that color their output,
+visibly contain ` - error `, yet `grep -E ' - error '` finds nothing, so
+the diff of error lists stays empty while the total rises.
 
 **Mechanism:** the matched words are interleaved with escape sequences
 (`\e[31m` …) in the byte stream.
@@ -206,8 +207,8 @@ the same probe (import-time throw) now yields `success: false` — and a
 post-test async throw vanished entirely at exit 0. The specific behavior
 moves between versions; the trap class stays.
 
-**Guard:** the process exit code outranks any reporter field. Read both;
-alarm on disagreement — that disagreement is the trap firing.
+**Guard:** the process exit code outranks any reporter field. Read both and
+alert on disagreement: that disagreement is the trap firing.
 
 ---
 
@@ -216,21 +217,21 @@ alarm on disagreement — that disagreement is the trap firing.
 ## 10) GitHub Actions `paths:` filters run per push, not per commit
 
 **Symptom:** you compute "which commits should have triggered CI" from
-`git log --name-only` and get a number wildly off reality; a docs-only push
-gets no run at all even though code commits earlier that day did.
+`git log --name-only` and get a number wildly off from reality; a docs-only
+push gets no run at all even though code commits earlier that day did.
 
 **Mechanism:** the filter is evaluated against the union of files changed in
-the whole push. A push whose commits are all-docs triggers nothing — and the
+the whole push. A push whose commits are all-docs triggers nothing, and the
 end-of-session docs push is exactly that.
 
 **Measured in the source corpus** (2026-08, over 11 days, `gh run list`
 against 157 pushes): computing runs from per-commit paths was off by a
-factor of ~20; 98 of 157 pushes (62 %) triggered no run under a filtered
-workflow — ten of them the session-closing docs pushes.
+factor of ~20; 98 of 157 pushes (62%) triggered no run under a filtered
+workflow, ten of them the session-closing docs pushes.
 
-**Guard:** for gate workflows: no `paths:` filter (run always, keep the jobs
-cheap). Measure what actually ran with `gh run list`, never with `git log`
-arithmetic.
+**Guard:** for gate workflows: no `paths:` filter (always run, and keep the
+jobs cheap). Measure what actually ran with `gh run list`, never with
+`git log` arithmetic.
 
 ---
 
@@ -243,33 +244,34 @@ arithmetic.
 works when invoked by hand and never triggers automatically.
 
 **Mechanism:** `description: Use when: always` is an illegal nested mapping
-("mapping values are not allowed in this context"); nothing warns at write
-time. The two artifact types then fail in opposite ways, per the official
-docs (code.claude.com/docs, checked 2026-08-21): a subagent file with broken
-YAML is skipped entirely ("Claude Code reads no fields from the file, skips
-it"); a SKILL.md with malformed frontmatter "loads the skill body with empty
-metadata, so `/skill-name` still works but Claude has no `description` to
-match against" — alive under manual test, dead in the mode that matters.
+("mapping values are not allowed in this context"), and nothing warns at
+write time. The two artifact types then fail in opposite ways, both per the
+official docs (code.claude.com/docs, checked 2026-08-21). A subagent file
+with broken YAML is skipped entirely: "Claude Code reads no fields from the
+file, skips it." A SKILL.md with malformed frontmatter instead "loads the
+skill body with empty metadata, so `/skill-name` still works but Claude has
+no `description` to match against" — alive under manual test, dead in the
+mode that matters.
 
 **Verified locally 2026-08-21** (Psych/YAML): hard SyntaxError. Measured in
-the source corpus on two agent definitions (js-yaml) — both would silently
-not have loaded. This file's own frontmatter quotes its description for
-exactly this reason.
+the source corpus on two agent definitions (js-yaml), where both would have
+silently failed to load. This file's own frontmatter quotes its description
+for exactly this reason.
 
 **Guard:** quote every frontmatter value that contains a colon; parse the
 file once (any YAML parser) before shipping it; for skills, test the
-*automatic* trigger, not just the slash command — and `--debug` shows the
-parse error.
+*automatic* trigger, not just the slash command. `--debug` shows the parse
+error.
 
 ## 12) An agents directory created mid-session stays invisible until the next start
 
 **Symptom:** a session creates `.claude/agents/` (which did not exist when
-the session started), writes `reviewer.md` into it — and gets "Agent type
+the session started), writes `reviewer.md` into it, and gets "Agent type
 not found" when invoking it.
 
 **Mechanism:** the file watcher covers only directories that existed at
 session start. Edits to files under an already-watched directory hot-reload
-"within a few seconds […] with no restart needed" (official docs) — the trap
+"within a few seconds […] with no restart needed" (official docs). The trap
 is specifically the *first* agent file in a *new* directory: "a running
 session doesn't detect a newly created `agents` directory." Validation tools
 check syntax, not availability.
@@ -277,12 +279,12 @@ check syntax, not availability.
 **Measured in the source corpus** (2026-08); both halves confirmed against
 code.claude.com/docs/en/sub-agents, checked 2026-08-21. (The first published
 version of this trap over-generalized to "all new definitions need a new
-session" — narrowed after review.)
+session", and was narrowed after review.)
 
 **Guard:** create the agents directory once, before you need it; after
-writing a scope's first agent file into a new directory, restart — and have
-the next brief name the new agents explicitly (in the measured corpus,
-offered-but-unnamed artifacts were used 0 out of 2 times).
+writing a scope's first agent file into a new directory, restart. Have the
+next brief name the new agents explicitly, because in the measured corpus
+offered-but-unnamed artifacts were used 0 out of 2 times.
 
 ## 13) Auto-memory is silently truncated — 200 lines, then 25,000 characters
 
@@ -291,19 +293,19 @@ context; nothing announces the cut.
 
 **Mechanism:** at load, MEMORY.md is truncated to 200 lines first, then to
 25,000 *characters* (UTF-16 units) at the last line boundary. The excess is
-dropped silently. A warning fires at 80 % of either limit — if something
+dropped silently. A warning fires at 80% of either limit, if something
 surfaces it. Note the unit collision: the official docs state the cap as
-"the first 25KB", and the tool's internal name for the limit says bytes —
-measured, it is 25,000 UTF-16 code units, which for any non-ASCII content is
-not the same thing.
+"the first 25KB", and the tool's internal name for the limit says bytes,
+but measured it is 25,000 UTF-16 code units, which for any non-ASCII
+content is not the same thing.
 
 **Measured in the source corpus** (extracted from the Claude Code binary
-v2.1.237 and observed in operation: an index at quota 0.885 was already
+v2.1.237 and observed in operation: an index at 88.5% of quota was already
 losing content).
 
 **Guard:** treat MEMORY.md as an index of one-line pointers, never as
 storage; check `wc -lc` against 200/25,000 in a routine gate; compact at
-80 %.
+80%.
 
 ## 14) In a Claude Code shell, `grep` and `rg` are not the system tools
 
@@ -380,9 +382,9 @@ String literals keep symbol names alive for naive matchers, and prose
 examples in docs contain code-shaped text.
 
 **Measured in the source corpus** (2026-08, repo-wide): 174 pseudo-comment
-false openings, 41 with damage, 5,874 swallowed lines, worst case 454 lines.
-A follow-up quick fix — splitting lines at `//` — also cut every `https://`
-URL: 575,353 characters across 1,255 files.
+false openings, 41 causing damage, 5,874 swallowed lines, worst case 454
+lines. A follow-up quick fix, splitting lines at `//`, also cut every
+`https://` URL: 575,353 characters across 1,255 files.
 
 **Guard:** parse regions (comments, strings) before matching, or use a
 parser-backed tool; pass the file path so the parser knows the language; and
