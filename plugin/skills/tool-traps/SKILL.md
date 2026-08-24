@@ -92,8 +92,11 @@ Neither conversion looks like an error to the tool.
 **Measured in the source corpus** (2026-08-17, result report AA-15, and
 2026-08-21, result report AA-20): `git grep -l PATTERN --untracked` with
 the flag after the pattern errored and was read as "no matches"; and a
-`head -12` turned a measured "9 of 26" into a reported "11 of 25". Both are
-recorded by the session that made them, in its own result report.
+`head -12` turned a measured "9 of 26" into a reported "11 of 25" — one of
+that number's two causes, the other being a pattern that counted a
+commented-out occurrence, so a truncation and a context-blind regex
+compounded into a single wrong number. Each session records the mistake as
+its own.
 
 **Guard:** never attach `2>/dev/null`, `head`, or `tail` to a command whose
 output decides anything. Read the failure; it is data.
@@ -140,9 +143,10 @@ is switched off as fast as one that never fires, so which way the zero
 falls is luck rather than safety. (The first published version of this
 entry had that backwards, as "reported every module clean"; the report says
 red.) The brief for that session carried the warning about exactly this
-(result report AA-7, 2026-08-13), and two later briefs carried it while
-their sessions hit the same trap again (AA-12, 2026-08-15, three times in
-one slice; AA-15, 2026-08-17).
+(result report AA-7, 2026-08-13), and two later sessions hit it with the
+warning standing in their own briefs too (AA-12, 2026-08-15, three times in
+one slice; AA-15, 2026-08-17, attested in the brief AA-15 wrote for its
+successor).
 
 **Re-measured in CI 2026-08-24** (ubuntu-latest, Linux 6.17, git 2.55.0,
 glibc), over the same fixture: `\s` → 1 hit, exit 0, and `\b` → 1 hit, exit
@@ -318,8 +322,14 @@ bytes; the measured limit is 25,000 UTF-16 code units, which for any
 non-ASCII content is not the same thing.
 
 **Measured in the source corpus** (2026-08-20, result report HE-1):
-extracted from the Claude Code binary v2.1.237 and observed in operation —
-an index at 88.5% of quota was already losing content.
+constants read out of the Claude Code binary v2.1.237, and an index
+measured against them at 22,130 characters over 130 lines — 88.5% of the
+character quota, past the 80% warning threshold and inside both caps, so
+nothing had been dropped yet; compaction took it to 75.3%. (The first
+published version of this entry called that index "already losing
+content". The report says otherwise, and the correction is the more useful
+fact: at 88.5% you get the warning, not the loss — and only if something
+surfaces it.)
 
 **Guard:** treat MEMORY.md as an index of one-line pointers, never as
 storage; check `wc -lc` against 200/25,000 in a routine gate; compact at

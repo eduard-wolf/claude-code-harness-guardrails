@@ -500,5 +500,7 @@ const registers = Object.entries(measured).map(([k, v]) => `${k}=${v}`).join(', 
 // The surplus is printed rather than absorbed.
 const stamped = catalog.entries.filter(e => e.dated > 0).length;
 const stampLines = catalog.entries.reduce((n, e) => n + e.stamps, 0);
-const surplus = stampLines === stamped ? '' : ` (${stampLines} stamp lines in all)`;
+const extra = catalog.entries.filter(e => e.stamps > 1).map(e => e.n);
+const surplus = stampLines === stamped ? ''
+  : ` (one each; ${stampLines} in the file, with a second on entr${extra.length === 1 ? 'y' : 'ies'} ${extra.join(', ')})`;
 console.log(`stated counts: OK — ${seen.counts} count marker(s) against measured ${registers}; ${seen.refs} trap reference(s), ${seen.ranges} group range(s), ${catalog.guards} guard line(s) for ${catalog.entries.length} entries, ${stamped} stamp line(s) for ${catalog.entries.length} entries${surplus}`);
