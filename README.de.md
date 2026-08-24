@@ -32,6 +32,31 @@ Es ist kein Framework, kein schlüsselfertiger Harness und kein Versprechen,
 dass alles besser wird. Es ergänzt Anthropics veröffentlichte
 Harness-Patterns; es ersetzt sie nicht.
 
+<!-- section: quickstart -->
+## Fünf Minuten
+
+Den Fallen-Katalog als Skill installieren (Claude Code ≥ 2.x):
+
+```
+/plugin marketplace add eduard-wolf/claude-code-harness-guardrails
+/plugin install tool-traps@claude-code-harness-guardrails
+```
+
+Oder von Hand kopieren — es ist eine einzelne Markdown-Datei:
+
+```bash
+git clone https://github.com/eduard-wolf/claude-code-harness-guardrails
+cp -r claude-code-harness-guardrails/plugin/skills/tool-traps ~/.claude/skills/
+```
+
+(Die Marketplace-Kurzform klont standardmäßig per SSH; ohne hinterlegten
+SSH-Schlüssel vorher `CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1` setzen.
+Projektlokal statt global: in `.claude/skills/` des Projekts kopieren.)
+
+Installation deterministisch prüfen: `/plugin` listet `tool-traps` als
+installiert. Danach die Spaßprobe: die Session bitten, ein `git grep` mit
+`\s` zu schreiben — sie sollte ablehnen und zu `[[:space:]]` greifen.
+
 <!-- section: proof -->
 ## Was wir belegen können — und was nicht
 
@@ -63,31 +88,6 @@ Zahlen-Kapitel als solche dokumentiert. In den Worten des Korpus selbst:
 Die vollständigen Zahlen, ihre Grundgesamtheiten und die Drift, die beim
 Bau dieses Repositories im eigenen Auftrags-Briefing gefunden wurde:
 **[docs/what-the-numbers-say.md](docs/what-the-numbers-say.md)** (englisch).
-
-<!-- section: quickstart -->
-## Fünf Minuten
-
-Den Fallen-Katalog als Skill installieren (Claude Code ≥ 2.x):
-
-```
-/plugin marketplace add eduard-wolf/claude-code-harness-guardrails
-/plugin install tool-traps@claude-code-harness-guardrails
-```
-
-Oder von Hand kopieren — es ist eine einzelne Markdown-Datei:
-
-```bash
-git clone https://github.com/eduard-wolf/claude-code-harness-guardrails
-cp -r claude-code-harness-guardrails/plugin/skills/tool-traps ~/.claude/skills/
-```
-
-(Die Marketplace-Kurzform klont standardmäßig per SSH; ohne hinterlegten
-SSH-Schlüssel vorher `CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1` setzen.
-Projektlokal statt global: in `.claude/skills/` des Projekts kopieren.)
-
-Installation deterministisch prüfen: `/plugin` listet `tool-traps` als
-installiert. Danach die Spaßprobe: die Session bitten, ein `git grep` mit
-`\s` zu schreiben — sie sollte ablehnen und zu `[[:space:]]` greifen.
 
 <!-- section: traps -->
 ## Der Fallen-Katalog

@@ -31,6 +31,31 @@ It is not a framework, not a turnkey harness, and not a promise that
 everything gets better. It composes with Anthropic's published harness
 patterns; it does not replace them.
 
+<!-- section: quickstart -->
+## Five minutes
+
+Install the trap catalog as a skill (Claude Code ≥ 2.x):
+
+```
+/plugin marketplace add eduard-wolf/claude-code-harness-guardrails
+/plugin install tool-traps@claude-code-harness-guardrails
+```
+
+Or copy it manually — it is a single Markdown file:
+
+```bash
+git clone https://github.com/eduard-wolf/claude-code-harness-guardrails
+cp -r claude-code-harness-guardrails/plugin/skills/tool-traps ~/.claude/skills/
+```
+
+(The marketplace shorthand clones over SSH by default; without an SSH key,
+set `CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1` first. Project-local instead of
+global: copy into `.claude/skills/` of the project.)
+
+Verify the install deterministically: `/plugin` lists `tool-traps` as
+installed. Then the fun probe: ask the session to write a `git grep` with
+`\s` — it should refuse and reach for `[[:space:]]`.
+
 <!-- section: proof -->
 ## What we can prove — and what we can't
 
@@ -61,31 +86,6 @@ chapter. In the corpus' own words:
 The full numbers, their populations, and the drift found in this
 repository's own commissioning brief while building it:
 **[docs/what-the-numbers-say.md](docs/what-the-numbers-say.md)**.
-
-<!-- section: quickstart -->
-## Five minutes
-
-Install the trap catalog as a skill (Claude Code ≥ 2.x):
-
-```
-/plugin marketplace add eduard-wolf/claude-code-harness-guardrails
-/plugin install tool-traps@claude-code-harness-guardrails
-```
-
-Or copy it manually — it is a single Markdown file:
-
-```bash
-git clone https://github.com/eduard-wolf/claude-code-harness-guardrails
-cp -r claude-code-harness-guardrails/plugin/skills/tool-traps ~/.claude/skills/
-```
-
-(The marketplace shorthand clones over SSH by default; without an SSH key,
-set `CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1` first. Project-local instead of
-global: copy into `.claude/skills/` of the project.)
-
-Verify the install deterministically: `/plugin` lists `tool-traps` as
-installed. Then the fun probe: ask the session to write a `git grep` with
-`\s` — it should refuse and reach for `[[:space:]]`.
 
 <!-- section: traps -->
 ## The trap catalog
