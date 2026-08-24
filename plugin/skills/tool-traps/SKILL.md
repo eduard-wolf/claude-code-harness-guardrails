@@ -85,9 +85,14 @@ usage error you threw away. Cousin: `head`/`tail` on a measurement
 silently truncates reality.
 
 **Mechanism:** discarded stderr converts "the command was wrong" into "the
-answer is zero." In the source corpus, `git grep -l PATTERN --untracked`
-with the flag after the pattern errored and was read as "no matches"; and a
-`head -12` turned a measured "9 of 26" into a reported "11 of 25".
+answer is zero"; truncation converts "the answer" into its first few lines.
+Neither conversion looks like an error to the tool.
+
+**Measured in the source corpus** (2026-08-17, result report AA-15, and
+2026-08-21, result report AA-20): `git grep -l PATTERN --untracked` with
+the flag after the pattern errored and was read as "no matches"; and a
+`head -12` turned a measured "9 of 26" into a reported "11 of 25". Both are
+recorded by the session that made them, in its own result report.
 
 **Guard:** never attach `2>/dev/null`, `head`, or `tail` to a command whose
 output decides anything. Read the failure; it is data.
@@ -304,9 +309,9 @@ cap as "the first 25KB", and the tool's internal name for the limit says
 bytes; the measured limit is 25,000 UTF-16 code units, which for any
 non-ASCII content is not the same thing.
 
-**Measured in the source corpus** (extracted from the Claude Code binary
-v2.1.237 and observed in operation: an index at 88.5% of quota was already
-losing content).
+**Measured in the source corpus** (2026-08-20, result report HE-1):
+extracted from the Claude Code binary v2.1.237 and observed in operation —
+an index at 88.5% of quota was already losing content.
 
 **Guard:** treat MEMORY.md as an index of one-line pointers, never as
 storage; check `wc -lc` against 200/25,000 in a routine gate; compact at
