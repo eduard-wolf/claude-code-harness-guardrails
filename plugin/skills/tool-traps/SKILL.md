@@ -12,17 +12,18 @@ Three rules for using this catalog:
 2. **Every trap carries a verification date and environment.** Tools change;
    a trap without a date is the next stale claim. If your version behaves
    differently, the catalog is wrong for you: re-verify, then rely on it. In
-   the source repository, CI re-runs at each push every trap it can put a
-   probe behind, the trap form first and then the remedy the entry
-   prescribes, and names the rest with number and reason. Its output, not
-   this date, tells you which of these entries were measured most recently
-   and on what.
+   the repository this catalog ships from, CI re-runs, on every push, every
+   trap it can put a probe behind, the trap form first and then the remedy
+   the entry prescribes, and names the rest by number, with the reason. Its
+   output, not this date, tells you which of these entries were measured
+   most recently and on what.
 3. **Being warned is not enough.** In the source corpus, two traps were hit
    *while the session's own brief carried the warning word for word*. The
-   guard column exists because knowledge does not survive contact with
+   guard line exists because knowledge does not survive contact with
    autopilot; mechanical checks do.
 
-Environment for the "verified locally" stamps below: macOS 26.0.1, git 2.50.1,
+Environment for the "verified locally" stamps below, unless an entry states
+its own: macOS 26.0.1, git 2.50.1,
 zsh 5.9 (arm64), bash 3.2.57, node 24.3.0, Claude Code 2.1.238 — 2026-08-21.
 
 ---
@@ -42,7 +43,7 @@ and a glob with zero matches is a hard error, not an empty list.
 **Verified locally 2026-08-21** (zsh 5.9): `for f in $VAR` → one item `[a b c]`
 where bash yields three; `echo before; echo *.nomatch; echo after` → `after`
 never prints. In a non-interactive zsh *script* it is worse, not gentler:
-the failed glob aborts the whole file: in the measurement the next line
+the failed glob aborts the whole file; in the measurement the next line
 never ran and the script exited 1. In the source corpus this combination let an `rm`
 behind a dead glob silently fail to run, and a stray test file got
 committed.
@@ -58,12 +59,13 @@ number, but the Bash tool, the CI step, and every wrapper judging the command
 line see exit 0 — the `echo`'s.
 
 **Mechanism:** `$?` inside the string is expanded correctly, but the command
-*line's* status is the status of its last command. Related: a background run
-piped through anything reports the pipe's exit code, not the command's.
+*line's* status is the status of its last command. Related: a run piped
+through anything (`| tee log`) reports the pipe's exit code, not the
+command's.
 
 **Verified locally 2026-08-21:** `zsh -c 'false; echo "EXIT=$?"'` prints
 `EXIT=1` and exits 0. In the source corpus the harness recorded success while
-the real code existed only in the log text.
+the real exit code existed only in the log text.
 
 **Guard:** let the measured command be the last thing on the line, or run
 under `set -o pipefail` so the pipeline reports the failure. If you read a
@@ -117,10 +119,9 @@ forever. The nastier shape: it works on the machine it was written on and
 finds nothing on the machine it runs on, or the reverse.
 
 **Mechanism:** `git grep -E` does not stop at POSIX ERE; it hands the
-pattern to the platform's regex library, which on glibc carries GNU
-extensions on top. glibc's carries the GNU operators
-`\s`, `\b` and `\w`; the BSD one on macOS does not, and `\d` is a GNU
-operator nowhere. Use `[[:space:]]`, `[[:digit:]]`, or `git grep -P` where
+pattern to the platform's regex library. glibc's carries the GNU operators
+`\s`, `\b`, and `\w`; the BSD one on macOS does not, and `\d` is an
+operator in neither. Use `[[:space:]]`, `[[:digit:]]`, or `git grep -P` where
 it exists. Second trap in the same tool: `git grep` exits 1 on zero
 matches, which *throws* inside `execFileSync` or under `set -e`, so your
 check reports "command failed" instead of a count.
@@ -158,8 +159,8 @@ scan over `src/` proves absence *in `src/`* — a library adapter in
 because not yet committed.
 
 **Guard:** `--untracked` when the work tree is the subject; and name the
-search surface in the check's output ("searched: src, services") so a too-
-narrow surface is visible instead of implied.
+search surface in the check's output ("searched: src, services") so a
+too-narrow surface is visible instead of implied.
 
 ---
 
@@ -233,7 +234,7 @@ against 157 pushes): computing runs from per-commit paths was off by a
 factor of ~20; 98 of 157 pushes (62%) triggered no run under a filtered
 workflow, 10 of them the session-closing docs pushes.
 
-**Guard:** for gate workflows: no `paths:` filter (always run, and keep the
+**Guard:** for gate workflows, no `paths:` filter (always run, and keep the
 jobs cheap). Measure what actually ran with `gh run list`, never with
 `git log` arithmetic.
 
@@ -287,7 +288,7 @@ session", and was narrowed after review.)
 
 **Guard:** create the agents directory once, before you need it; after
 writing a scope's first agent file into a new directory, restart. And have
-the next brief name the new agents explicitly — in the measured corpus,
+the next brief name the new agents explicitly — in the source corpus,
 offered-but-unnamed artifacts were used 0 out of 2 times.
 
 ## 13) Auto-memory is silently truncated — 200 lines, then 25,000 characters
@@ -331,17 +332,16 @@ shell snapshot rather than to the system tools; they run the search engines
 embedded in the Claude Code binary (`ARGV0=ugrep claude -G …`,
 `ARGV0=rg claude …`). `type -f grep` prints the function body in zsh, and
 `type grep` does it in bash; `which ugrep` finds no binary at all. The two
-functions are not alike. The `grep` one prepends flags of its own in front
-of your arguments: `--ignore-files
---hidden -I --exclude-dir=.git`, plus one exclusion per further VCS
-directory. `--ignore-files` applies every `.gitignore` it finds, with no
+functions are not alike. The `grep` one puts flags of its own in front of
+your arguments: `--ignore-files --hidden -I --exclude-dir=.git`, plus one
+exclusion per additional VCS directory. `--ignore-files` applies every `.gitignore` it finds, with no
 git repository required for it to take effect, and `--exclude-dir=.git`
 drops the repository's own files; only `--hidden` runs the other way,
 putting dotfiles back in, which is where the system `grep -r` has them
-anyway. The `rg` function forwards your arguments unchanged, and is
-defined at all only on a host with no ripgrep of its own, though ripgrep's
-defaults skip ignored and hidden files in any case. Symptom (b) below was
-measured on `grep`. Nothing here governs order; `-J1` (one worker) makes
+anyway. The `rg` function forwards your arguments unchanged, and exists
+only on a host without a ripgrep of its own, though ripgrep's defaults skip
+ignored and hidden files in any case. Symptom (b) was measured on `grep`
+only. Nothing here governs order; `-J1` (one worker) makes
 the order stable, so the engines evidently walk several files at once and
 print each file's block once that file is finished: the order follows
 completion, not the command line.
@@ -352,9 +352,9 @@ README.md README.de.md` printed the *second* file's block first in 4 of
 10; the same 10 runs under `rg`, in 5 of 10. Blocks stayed contiguous in
 all 20 runs; only their order moved. 10 runs each of
 `command -p grep`, `grep -J1` and `rg --sort path` held argument order 10
-of 10, re-checked with the arguments swapped, though for this pair
-argument order is not path order, so what `--sort path` bought was
-determinism rather than alphabetical order. The trap hit the baseline
+of 10, re-checked with the arguments swapped. For this pair argument order
+is not alphabetical order, so `--sort path` bought determinism, not
+sorting. The trap hit the baseline
 check of this repository's own session brief, where that same command line
 sits in the starting-state table.
 

@@ -24,7 +24,7 @@ The flavor of the whole catalog, in one line each:
 
 ```bash
 git grep -E 'foo\s*\('        # silent zero hits on macOS, matches on glibc
-false | cat; echo "EXIT=$?"   # prints 1 - and reports exit 0 to your harness
+false; echo "EXIT=$?"         # prints EXIT=1 - and reports exit 0 to your harness
 ```
 
 It is not a framework, not a turnkey harness, and not a promise that
@@ -66,7 +66,7 @@ into the per-agent directories the CLI supports, Claude Code among them
 you run it in — measured the same day in a directory with neither `.git`
 nor `package.json`, where it still landed in `./.agents/`. Use `-g` to
 install globally instead. Traps 11 to 14<!-- trap-group: Claude Code harness = 11-14 -->
-are the catalog's own "Claude Code harness" group and bound to this
+are the catalog's own "Claude Code harness" group, the one bound to this
 harness; everything else in it is tool-level and agent-agnostic.
 
 Deterministic check, for the plugin route: `/plugin` lists `tool-traps` as
@@ -87,7 +87,7 @@ would expect this README to tell:
 
 > With n = 2 sessions after the harness optimization, no trend is provable —
 > Welch's t ≈ 1.9, p ≈ 0.12 — and one session from *before* the optimization
-> already beat both after-values.
+> already beat both post-optimization values.
 
 Two honest limits on that number. It measures one harness optimization
 *inside* the source project, not the trap catalog and not the brief pattern,
@@ -114,10 +114,10 @@ date, and the guard against it. No brainstormed risks. Three samples:
 
 - `description: Use when: always` is a hard YAML parse error. The agent is
   simply gone ("Agent type not found"); the skill turns zombie: alive
-  under its slash command, dead in the automatic trigger. (Trap 11)<!-- trap-ref: 11 YAML -->
+  under its slash command, dead to the automatic trigger. (Trap 11)<!-- trap-ref: 11 YAML -->
 - An agents directory created *mid-session* stays invisible until the next
   start, because the file watcher covers only directories that existed at
-  session start. The file is written, the agent is not found. (Trap 12)<!-- trap-ref: 12 agents -->
+  session start. The file is written; the agent is not found. (Trap 12)<!-- trap-ref: 12 agents -->
 - Auto-memory (`MEMORY.md`) is silently truncated at 200 lines / 25,000
   characters. That is measured, down to the fact that the tool's internal
   name for the limit says "bytes" and means characters. (Trap 13)<!-- trap-ref: 13 memory -->
@@ -147,7 +147,7 @@ The counterintuitive core, measured in the corpus: **the brief is a chain
 output, not a human input.** Pre-written skeleton templates failed there:
 not one was ever run as written, and each first had to be hand-expanded to
 11 to 23 times its size. Briefs written by the outgoing session, while its
-knowledge is fresh and measured, carried the chain. The
+knowledge was fresh and measured, carried the chain. The
 template here is a *seed* for the first brief, not a form to fill per
 session.
 
@@ -174,8 +174,8 @@ method to itself, in CI, on every push:
   *marked* for the guard in this README (like the trap count above) is
   re-measured against the artifact itself. No second register: the catalog
   is the only source of its own count. The same guard re-measures every
-  trap reference here. A "(Trap 11)<!-- trap-ref: 11 YAML -->" has to still
-  point at the entry it names, and a reference left unmarked is red as
+  trap reference here. A `(Trap 11)<!-- trap-ref: 11 YAML -->` still has to point at the entry
+  it names, and a reference left unmarked is red as
   well, so renumbering the catalog cannot leave the prose quietly wrong.
   On top of that it holds one unmarked invariant: as many `**Guard:**`
   lines in the catalog as entries, which is what makes "every entry here
@@ -235,8 +235,8 @@ license.
 
 The obvious objection writes itself: an AI-written corpus as the evidence
 for a method about AI sessions. The answer here is separation, not
-assurance. The push is one instance of it: a session prepares it, a human
-decides it. One level deeper, in the source project this is distilled
+assurance. The push is one instance of it: a session prepares it; a human
+makes the call. One level deeper, in the source project this is distilled
 from, evaluation is separated from generation the same way: an adversarial
 review gate reads the work with fresh context, and the gate's *own* miss
 rate is measured instead of estimated. That metric sits in
