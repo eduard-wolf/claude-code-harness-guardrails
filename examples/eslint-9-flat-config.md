@@ -1,13 +1,13 @@
 <!--
   WORKED EXAMPLE - a session brief filled in for a realistic task on a
-  neutral object: migrating a mid-size TypeScript repository from ESLint 8
+  neutral subject: migrating a mid-size TypeScript repository from ESLint 8
   (.eslintrc) to ESLint 9 (flat config).
 
   This example is illustrative. Values marked (example) show what a real
   brief carries at that spot - replace them with numbers measured on your
   repository. The commands are real; run them. The traps listed are real
-  ESLint 9 behavior, stated conservatively - verify them against your
-  versions, that is the point of the method.
+  ESLint 9 behavior, stated conservatively - verify them against your own
+  versions, which is the point of the method.
 -->
 
 ---
@@ -55,7 +55,7 @@ after, diff empty (modulo documented, justified exceptions).
 |---|---|---|---|
 | eslint version | 8.57.0 (example) | `npx eslint --version` | 2026-08-21 |
 | files linted | 412 (example) | `npx eslint . --format json \| node -e '...count...'` | 2026-08-21 |
-| lint errors on main | 0 (example — must be 0 before you start) | `npx eslint .` | 2026-08-21 |
+| lint errors on main | 0 (example: must be 0 before you start) | `npx eslint .` | 2026-08-21 |
 | effective rules for one representative file | 143 (example) | `npx eslint --print-config src/index.ts \| node -e '...count keys...'` | 2026-08-21 |
 
 **Re-measure before you rely on it.** A migration on top of a dirty baseline
@@ -67,7 +67,7 @@ cannot tell its own breakage from pre-existing breakage.
 |---|---|---|
 | Parity or modernization? | Parity. | Two changes in one diff cannot be reviewed. |
 | Formatting rules that ESLint 9 dropped? | Keep via @stylistic only if they were active before; otherwise drop and document. | Parity, not archaeology. |
-| Legacy shareable configs without flat support? | Bridge with FlatCompat from @eslint/eslintrc, removal is half B. | One new mechanism per session. |
+| Legacy shareable configs without flat support? | Bridge with FlatCompat from @eslint/eslintrc; removal is half B. | One new mechanism per session. |
 
 **Default for new questions:** decide with reasons, implement, document in
 the result report. Do not stop to ask.
@@ -88,7 +88,7 @@ the result report. Do not stop to ask.
 
 | Do not | Why |
 |---|---|
-| Fix new findings that appear during migration | They mean parity was NOT reached — that is a config bug to fix, or a documented exception. Fixing code hides the config bug. |
+| Fix new findings that appear during migration | They mean parity was NOT reached: that is a config bug to fix, or a documented exception. Fixing code hides the config bug. |
 | Upgrade plugin majors "while we are at it" | Separate failure surface, separate session (half B). |
 | Adopt a new style preset | Policy change, owner decision, not commissioned. |
 
@@ -97,13 +97,13 @@ attractive during the spike — parked for a policy discussion, not built.
 
 ## Known traps
 
-All hit during the spike for this migration (illustrative here — your spike
+All hit during the spike for this migration (illustrative here; your spike
 will produce your list):
 
 1. **`.eslintignore` is silently ignored under flat config.** The lint run
-   then covers MORE files than before and "new errors" appear that are
-   really old files. Guard: compare linted-file counts first, before
-   reading a single finding.
+   then covers MORE files than before, and "new errors" appear that are
+   really just newly covered old files. Guard: compare linted-file counts
+   first, before reading a single finding.
 2. **`env: { node: true }` does not exist in flat config.** Without
    `languageOptions.globals`, `process` and friends become `no-undef`
    errors. Guard: the parity diff catches it as a rule-input change.
@@ -130,7 +130,7 @@ the tool-traps skill; install it instead of restating it here.)
   legacy files removed. Half B — replace each FlatCompat bridge with the
   plugin's native flat config, plugin upgrades where required.
 - **The trigger:** more than half the context window spent when half A is
-  green — cut.
+  green: cut.
 - **What half A must be when you cut:** linting green in CI, parity diff
   committed, result report written.
 - **What happens to half B:** its own brief, LINT9-1b, written by you,
@@ -144,13 +144,13 @@ the tool-traps skill; install it instead of restating it here.)
    explained in `docs/lint9-parity.md`.
 4. CI runs the new lint script and is green.
 5. The parity guard got its counter-test: break one rule on purpose in a
-   scratch file — the run must go red. A guard without a counter-test is a
-   claim.
+   scratch file, and the run must go red. A guard without a counter-test is
+   a claim.
 
 ## Completion
 
 Result report with: after-state table (re-measured), autonomous decisions
 with reasons, corrected inherited numbers, new traps with mechanisms, what
-argues against the result (e.g. "parity proven only for representative
+argues against the result (e.g., "parity proven only for representative
 files, not all 412") — and the next brief (LINT9-1b or LINT9-2) as a file
 and a copy-ready start block.

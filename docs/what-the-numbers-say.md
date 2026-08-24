@@ -10,26 +10,28 @@ The pattern in this repository was distilled from the working corpus of
 security SaaS: 189,691 lines of application TypeScript and 174,015 lines of
 test code in 433 test files (measured 2026-08-21; counting rule below),
 developed almost entirely through briefed, autonomous Claude Code sessions.
-Its review chain comprises 262 files — 85 session briefs and 49 result
-reports among them (counted 2026-08-21, recursively, in the corpus
+Its review chain comprises 262 files, including 85 session briefs and 49
+result reports (counted 2026-08-21, recursively, in the corpus
 directory).
 
 In August 2026 a meta-chain of sessions turned the method on itself: it
 measured the harness instead of the product. The numbers below are from
 those runs. The corpus is not published — it contains the architecture and
 security findings of a live product. What is published is the pattern, and
-the numbers with their populations. One framing note for the failure
-numbers: each describes a measured historical window in the source
-project's process, and each is published together with the mechanism that
-closed it — the 62 % gap with the unfiltered gate workflow, the stale
-numbers with the cross-source check, the empty coverage promises with the
-promise-measuring guard, the overflow with the budget rule.
+the numbers with their populations.
+
+One framing note for the failure numbers: each describes a measured
+historical window in the source project's process, and each appears along
+with the mechanism that closed it. The 62% gap was closed by the unfiltered
+gate workflow, the stale numbers by the cross-source check, the empty
+coverage promises by the promise-measuring guard, and the overflow by the
+budget rule.
 
 ## The headline measurement — and what it does not show
 
 After an optimization of the harness (a hard cap on the context file, a
 gate workflow decoupled from deploys), the chain compared the context drift
-of sessions before the change with the two sessions after it:
+of sessions before the change with that of the two sessions after it:
 
 > "With n = 2 after the optimization, no trend in the review gate is
 > provable; the halved context drift is statistically indistinguishable
@@ -43,8 +45,8 @@ Three honest limits, stated in the source itself and sharpened here:
   improved, the measurement cannot attribute it to the optimization.
 - **The metric itself is under-documented.** "Context drift" was measured in
   the session that ran the comparison; the pre-series and the metric's exact
-  definition were not durably written down. By this repository's own
-  standard, the headline number does not fully meet the evidence bar — that,
+  definition were never recorded anywhere lasting. By this repository's own
+  standard, the headline number does not fully meet the evidence bar. That,
   too, is a finding, and the reason the chain now writes measurements down
   before citing them.
 
@@ -76,14 +78,14 @@ before-push; n = 3 — no trend yet, but counted from now on).
 
 ## Supporting measurements, each with its population
 
-- **62 % of pushes triggered no CI run.** 157 pushes to main over eleven
-  days, 98 without any run, measured with `gh run list` (not with `git log`
-  arithmetic — that method is off by a factor of ~20, see trap 10). Cause:
-  `paths:` filters plus the fact that end-of-session docs pushes match no
-  code path. Fix: a gate workflow with no path filter.
-- **A 25.0 % cut of the context file did not stay cut.** 181,534 → 136,245
-  characters; but 44.6 % of the file (121 of 340 content units) were mixed
-  units — history and live rules interleaved, not mechanically separable —
+- **62% of pushes triggered no CI run.** 157 pushes to main over 11 days,
+  98 without any run, measured with `gh run list` rather than with
+  `git log` arithmetic, which is off by a factor of ~20 (see trap 10).
+  Cause: `paths:` filters plus the fact that end-of-session docs pushes
+  match no code path. Fix: a gate workflow with no path filter.
+- **A 25.0% cut of the context file did not stay cut.** 181,534 → 136,245
+  characters. But 121 of 340 content units (44.6% of the file) were mixed
+  units, history and live rules interleaved and not mechanically separable,
   and the file regrows by ~6,200 characters per session. The source's own
   verdict: the cut "bought time, built no mechanism."
 - **Of 69 coverage promises in 9 guard files, 3 were empty and 2 narrowed.**
@@ -99,19 +101,19 @@ before-push; n = 3 — no trend yet, but counted from now on).
   a claim, even in the report about claims.")
 - **Escape rate, defined and started.** Defects a session's author and its
   review gate both missed, found later by CI, a successor, a production
-  smoke test, or the owner — normalized per 1,000 changed lines. First data
+  smoke test, or the owner, normalized per 1,000 changed lines. First data
   points: 1.49 and 1.02 escaped/1,000 for two earlier sessions, 0 (so far)
   for the session that built the metric. Stated limits: every value is a
   lower bound; a rising rate can mean sloppier work *or* more thorough
-  successors — the metric separates self-report from external finding, it
-  does not resolve that ambiguity; values compare within the corpus and mean
-  nothing as absolutes.
+  successors, and the metric separates self-report from external finding
+  without resolving that ambiguity; values compare within the corpus and
+  mean nothing as absolutes.
 - **Enforced artifacts get used; offered ones don't.** In the two sessions
   measured: checks wired into CI or imports were effective 2 of 2 times;
   artifacts that were merely available (subagent definitions, a progress
-  directory) were used 0 of 2 and 1 of 2 times. The corpus' later refinement:
-  an instruction works when it *meets* the executor — nothing had named the
-  offered artifacts.
+  directory) were used 0 of 2 and 1 of 2 times. The corpus's later
+  refinement: an instruction works when it *reaches the one executing it*,
+  and nothing had named the offered artifacts.
 
 ## Drift found while building this repository
 
@@ -129,15 +131,20 @@ caught by re-measuring, which is the method:
 
 A four-perspective pre-publication review (hiring-manager, developer,
 fact-checker, leak-checker) then caught five more claims in this repository
-itself that did not survive verification: an overclaim about what the counts
-guard checks ("stated" where only *marked* counts are measured), a trap
-stated more broadly than its measurement (the agents-directory trap, since
-narrowed to the documented mechanism), a guard example valid in bash but
-silently inert in the catalog's own stamped shell (`${PIPESTATUS[0]}` under
-zsh), a "skeletons sit unexecuted" claim the corpus git log refutes (the
-sessions ran — on hand-expanded briefs eleven to twenty-three times the
-skeleton's size), and a generation table whose classification rule was not
-stated and whose fragile rows an independent reproduction could not confirm.
+itself that did not survive verification:
+
+- an overclaim about what the counts guard checks: it said "stated" where
+  only *marked* counts are measured;
+- a trap stated more broadly than its measurement, the agents-directory
+  trap, since narrowed to the documented mechanism;
+- a guard example valid in bash but silently inert in the catalog's own
+  stamped shell, `${PIPESTATUS[0]}` under zsh;
+- a "skeletons sit unexecuted" claim the corpus git log refutes: the
+  sessions ran, on hand-expanded briefs eleven to twenty-three times the
+  skeleton's size;
+- a generation table whose classification rule was not stated and whose
+  fragile rows an independent reproduction could not confirm.
+
 All five are fixed; the error class survives: **a number from a document is
 a claim — including the documents in this repository.**
 
@@ -172,8 +179,8 @@ claims, one of them on a host the author does not control.
 |---|---|---|
 | t ≈ 1.9, p ≈ 0.12; one pre-value below both post-values | meta-chain brief HE-3, verbatim | 2 post-optimization sessions vs. pre-series (pre-series not durably documented) |
 | 4 stale numbers stopped by CI; 4 caught pre-push | result reports RE-3b, HE-3 | living briefs at push time |
-| 62 % pushes without run | result report HE-1 | 157 pushes / 11 days, `gh run list` |
-| −25.0 % cut; 44.6 % mixed units; ~6,200 chars/session regrowth | brief + result report HE-2 | context file, 181,534 chars, 340 units |
+| 62% pushes without run | result report HE-1 | 157 pushes / 11 days, `gh run list` |
+| −25.0% cut; 44.6% mixed units; ~6,200 chars/session regrowth | brief + result report HE-2 | context file, 181,534 chars, 340 units |
 | 69 promises / 3 empty / 2 narrowed | result report AA-K1 | 9 guard files at HEAD |
 | 21 own defects / 0 by reading | result report HE-3 | one session's registered defects |
 | escape-rate points 1.49 / 1.02 / 0 per 1,000 lines | result report HE-3 | changed lines in src, services, scripts per session |

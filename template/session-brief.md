@@ -1,8 +1,8 @@
 <!--
   SESSION BRIEF TEMPLATE
 
-  How this template is meant to be used - read this once, it is the most
-  important thing in the file:
+  How this template is meant to be used - read this once, because it is the
+  most important thing in the file:
 
   A human writes the FIRST brief from this template. Every brief after that
   is written by the outgoing session as its last deliverable, while its
@@ -49,7 +49,7 @@ is not on it, you do not need it to start.
 2. `[path]` — [why]
 
 Where sources conflict: [name the winner now - do not leave conflicts for the
-agent to resolve, resolve them in the brief].
+agent to resolve; resolve them in the brief].
 
 ## What this is — and what it is not
 
@@ -78,7 +78,7 @@ the date. If a number cannot be reproduced, it does not belong here.
 **Re-measure before you rely on it.** Your predecessor's numbers are claims
 until you have reproduced them. If your measurement differs, yours wins - with
 the evidence in your result report. (In the source corpus, sessions corrected
-between zero and eight inherited values per run. Plan for it — and treat a
+between zero and eight inherited values per run. Plan for it - and treat a
 clean zero as a result worth reporting, not as wasted effort.)
 
 ## Owner decisions — fixed, not up for debate
@@ -100,7 +100,7 @@ verified - not expected paths.]
 
 The most valuable section and the rarest. These are not "out of scope" lines;
 they are things considered and rejected, with the reason, so the next person
-does not redo the consideration.
+does not repeat the analysis.
 
 | Do not | Why |
 |---|---|
@@ -137,7 +137,7 @@ This section is why sessions in the source corpus stopped overflowing.
 - **The trigger:** if more than half your context window is spent when half A
   is done, cut. Measure your consumption; do not estimate it.
 - **What half A must be when you cut:** complete, green, delivered, with its
-  result report - not a torso.
+  result report - not a half-finished fragment.
 - **What happens to half B:** it gets its own full brief, written by you,
   named [chain-name]-[n]b.
 
@@ -145,7 +145,7 @@ A planned cut is a clean delivery. Running over is not.
 
 ## Gate
 
-Done means, verifiably:
+Done means all of the following, verifiably:
 
 1. [criterion with exact expected value, not a direction - "exactly 0", not
    "fewer"]
@@ -165,6 +165,6 @@ Your result report contains:
   successor does not know;
 - **what argues against your own result** - a result without a named weakness
   is unfinished;
-- and the next brief, [chain-name]-[n+1], in the same quality as this one,
+- and the next brief, [chain-name]-[n+1], to the same standard as this one,
   as a file AND as a copy-ready start block. This is not optional; the chain
   must carry without the operator.
