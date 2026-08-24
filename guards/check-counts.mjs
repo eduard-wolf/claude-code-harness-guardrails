@@ -15,6 +15,18 @@
 //                   A marked number — digits or a number word, English or
 //                   German — against a register that measures the file.
 //
+//                   One register, `guards`, counts `guards/*.mjs` instead of
+//                   reading the catalog. That looks like a different kind of
+//                   check and is the same error class: "All three guards run
+//                   their counter-test first" is a claim about this repository
+//                   that anybody can re-measure and that nothing was
+//                   re-measuring. It was written when the third guard arrived,
+//                   it was true that day, and a fourth guard would have left
+//                   it quietly wrong — which is the sentence this whole file
+//                   exists to make impossible. The register reads the
+//                   directory, not a list of names, so adding a guard is
+//                   enough to move it.
+//
 //   which number    `(Trap 11)<!-- trap-ref: 11 YAML -->`
 //   means what      The number in the marker must equal the number the reader
 //                   sees, entry 11 must exist, and its heading must contain
@@ -62,7 +74,7 @@
 // once; measured here, it did. It then asserts that no error branch is left
 // without a counter-test, and finally that a CRLF copy of the catalog measures
 // exactly what the LF original measures.
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -74,10 +86,14 @@ const CATALOG = 'plugin/skills/tool-traps/SKILL.md';
 // catalog entries.
 const PROSE_FILES = ['README.md', 'README.de.md'];
 
-// Registers: name -> function measuring the parsed catalog.
+// Registers: name -> function measuring the sources. `traps` and `trap-groups`
+// read the parsed catalog; `guards` reads the guards directory (see header).
+// Both arguments are passed in rather than read here, so `check()` stays a pure
+// function of its input and the self-test can falsify either.
 const REGISTERS = {
-  traps: c => c.entries.length,
-  'trap-groups': c => c.groups.length,
+  traps: (c, src) => c.entries.length,
+  'trap-groups': (c, src) => c.groups.length,
+  guards: (c, src) => src.guardFiles.length,
 };
 
 // Every error this guard can raise. The self-test refuses to pass while one of
@@ -153,7 +169,7 @@ function check(src) {
   const catalog = parseCatalog(src.catalog);
 
   const measured = {};
-  for (const [name, fn] of Object.entries(REGISTERS)) measured[name] = fn(catalog);
+  for (const [name, fn] of Object.entries(REGISTERS)) measured[name] = fn(catalog, src);
 
   // Hard invariant, no marker: the catalog's own closing promise.
   if (catalog.guards !== catalog.entries.length) {
@@ -240,9 +256,15 @@ function check(src) {
 const sources = {
   catalog: readFileSync(join(ROOT, CATALOG), 'utf8'),
   prose: PROSE_FILES.map(f => [f, readFileSync(join(ROOT, f), 'utf8')]),
+  // The directory, not a list of names: a guard added tomorrow counts itself.
+  guardFiles: readdirSync(join(ROOT, 'guards')).filter(f => f.endsWith('.mjs')),
 };
 
-const copyOf = s => ({ catalog: s.catalog, prose: s.prose.map(([f, t]) => [f, t]) });
+const copyOf = s => ({
+  catalog: s.catalog,
+  prose: s.prose.map(([f, t]) => [f, t]),
+  guardFiles: [...s.guardFiles],
+});
 
 // Falsify in the first prose file that carries the claim; one wrong register is
 // enough to demand red.
@@ -300,6 +322,20 @@ const COUNTER_TESTS = [
   { expect: 'count-mismatch', name: 'stated group count off by one',
     mutate: src => inFirstProse(src, /([A-Za-zÄÖÜäöüß]+|\d+)((?:\*\*)?<!--\s*count:trap-groups\s*-->)/,
       (_, token, tail) => `${numberOf(token) + 1}${tail}`) },
+
+  // The guards register is the one that measures the file system, so it gets
+  // its counter-test from both ends: the prose can be wrong about the
+  // directory, and the directory can move under the prose.
+  { expect: 'count-mismatch', name: 'stated guard count off by one',
+    mutate: src => inFirstProse(src, /([A-Za-zÄÖÜäöüß]+|\d+)((?:\*\*)?<!--\s*count:guards\s*-->)/,
+      (_, token, tail) => `${numberOf(token) + 1}${tail}`) },
+
+  { expect: 'count-mismatch', name: 'a fourth guard added to the directory, prose unchanged',
+    mutate: src => {
+      const out = copyOf(src);
+      out.guardFiles = [...out.guardFiles, 'check-something-new.mjs'];
+      return { src: out, applied: true };
+    } },
 
   { expect: 'ref-unmarked', name: 'a catalog reference left without its marker',
     mutate: src => inFirstProse(src, /\s*<!--\s*trap-ref:[^>]*-->/, '') },

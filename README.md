@@ -196,9 +196,9 @@ method to itself, in CI, on every push:
   copy of it — and if a trap ever stops reproducing, the guard goes red on
   purpose. That is the catalog asking to be re-verified, not a broken build.
 
-All three guards run their **counter-test first** (`--self-test`): each
-proves it *can* go red before its green is accepted. A guard without a
-counter-test is a claim.
+All three<!-- count:guards --> guards run their **counter-test first**
+(`--self-test`): each proves it *can* go red before its green is accepted. A
+guard without a counter-test is a claim.
 
 <!-- section: provenance -->
 ## Where the numbers come from

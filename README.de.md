@@ -207,9 +207,9 @@ die eigene Methode auf sich selbst an, in CI, bei jedem Push:
   nicht mehr, wird der Guard absichtlich rot. Das ist der Katalog, der um
   Nachprüfung bittet, kein kaputter Build.
 
-Alle drei Guards fahren zuerst ihre **Gegenprobe** (`--self-test`): Jeder
-beweist, dass er rot werden *kann*, bevor sein Grün zählt. Ein Guard ohne
-Gegenprobe ist eine Behauptung.
+Alle drei<!-- count:guards --> Guards fahren zuerst ihre **Gegenprobe**
+(`--self-test`): Jeder beweist, dass er rot werden *kann*, bevor sein Grün
+zählt. Ein Guard ohne Gegenprobe ist eine Behauptung.
 
 <!-- section: provenance -->
 ## Woher die Zahlen kommen
