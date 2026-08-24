@@ -48,6 +48,26 @@
 //   ends in a       `## N)` entries. That turns "every entry here ends in a
 //   guard           guard" from a promise into a measurement.
 //
+//   every entry     The catalog's other unmarked promise, measured the same
+//   carries a       way. Rule 2 of its preamble says "every trap carries a
+//   dated stamp     verification date and environment"; the README, the release
+//                   notes and the issue form repeat it. Four places, and nothing
+//                   was counting. A hostile read of v1.0.0 counted by hand and
+//                   found two of fifteen entries undated: entry 3 had no stamp
+//                   line at all, entry 13 a stamp carrying a binary version and
+//                   no date. So: between an entry's heading and the next
+//                   heading there must be a line opening `**Verified` or
+//                   `**Measured` that carries a `YYYY-MM` or `YYYY-MM-DD` date.
+//                   Missing line and undated line are two errors, not one,
+//                   because they are two different repairs.
+//
+//                   The date has to sit on the stamp line itself. A reflow that
+//                   pushes it onto the next line turns this red without a
+//                   measurement having gone missing — which is why the error
+//                   names the entry and says which of the two cases it is. The
+//                   alternative, scanning the whole paragraph, buys reflow
+//                   tolerance by giving up on knowing which line it certified.
+//
 // Two rules learned by measuring this guard against planted input, after a
 // review found four ways to stay green while measuring nothing:
 //
@@ -100,6 +120,8 @@ const REGISTERS = {
 // these has no counter-test, so the list cannot quietly grow past its proof.
 const BRANCHES = {
   'catalog-guard-count': 'catalog has a different number of **Guard:** lines than entries',
+  'catalog-stamp-missing': 'a catalog entry carrying no verification stamp line at all',
+  'catalog-stamp-undated': 'a catalog entry whose stamp line carries no date',
   'marker-malformed': 'a comment starts like one of our markers but does not match its form',
   'count-unbound': 'a count marker with no number in front of it',
   'count-unknown-register': 'a count marker naming a register this guard does not measure',
@@ -127,6 +149,11 @@ const STRICT = {
 // The number belonging to a count marker sits in front of it. Bold optional,
 // whitespace (a reflowed line break included) tolerated.
 const COUNT_TOKEN = /(?:\*\*)?([A-Za-zÄÖÜäöüß]+|\d+)(?:\*\*)?\s*$/;
+// Rule 2 of the catalog's preamble, in machine form: a stamp opens its line and
+// carries its date on that same line. `**Re-measured` and `**Version note` are
+// deliberately not stamps — they annotate an entry that must already have one.
+const STAMP = /^\*\*(?:Verified|Measured)\b/;
+const STAMP_DATE = /\b\d{4}-\d{2}(?:-\d{2})?\b/;
 const REFERENCE = /\((?:Trap|Falle)\s+(\d+)\)/g;
 const REF_BEHIND = /^\s*<!--\s*trap-ref\s*:\s*(\d+)\b/;
 
@@ -148,17 +175,29 @@ function numberOf(token) {
 const lf = text => text.replace(/\r\n?/g, '\n');
 
 // One pass over the catalog: `## N)` is an entry, any other `## ` is a group.
+// Stamp lines are attributed to the entry they sit under; a group heading ends
+// that entry's reach, so a stamp under a group intro belongs to no entry.
 function parseCatalog(text) {
   const entries = [], groups = [];
-  let guards = 0, inFence = false;
+  let guards = 0, inFence = false, open = null;
   lf(text).split('\n').forEach((line, i) => {
     if (/^\s*```/.test(line)) { inFence = !inFence; return; }
     if (inFence) return;
     if (/^\*\*Guard:\*\*/.test(line)) { guards++; return; }
+    if (open && STAMP.test(line)) {
+      open.stamps++;
+      if (STAMP_DATE.test(line)) open.dated++;
+      return;
+    }
     const h = /^## (?:(\d+)\)\s*)?(.*)$/.exec(line);
     if (!h) return;
-    if (h[1]) entries.push({ n: Number(h[1]), title: h[2].trim(), line: i + 1 });
-    else groups.push({ title: h[2].trim(), line: i + 1 });
+    if (h[1]) {
+      open = { n: Number(h[1]), title: h[2].trim(), line: i + 1, stamps: 0, dated: 0 };
+      entries.push(open);
+    } else {
+      open = null;
+      groups.push({ title: h[2].trim(), line: i + 1 });
+    }
   });
   return { entries, groups, guards };
 }
@@ -174,6 +213,15 @@ function check(src) {
   // Hard invariant, no marker: the catalog's own closing promise.
   if (catalog.guards !== catalog.entries.length) {
     fail('catalog-guard-count', `${CATALOG}: ${catalog.entries.length} entr(ies) but ${catalog.guards} "**Guard:**" line(s) — "every entry ends in a guard" is false`);
+  }
+
+  // The other one, per entry so the red names the entry to repair.
+  for (const e of catalog.entries) {
+    if (e.stamps === 0) {
+      fail('catalog-stamp-missing', `${CATALOG}: entry ${e.n} carries no "**Verified…" or "**Measured…" line — "every trap carries a verification date and environment" is false for it`);
+    } else if (e.dated === 0) {
+      fail('catalog-stamp-undated', `${CATALOG}: entry ${e.n} has a stamp line but no YYYY-MM or YYYY-MM-DD date on it — an undated stamp is the next stale claim`);
+    }
   }
 
   const seen = { counts: 0, refs: 0, ranges: 0 };
@@ -301,6 +349,12 @@ function inCatalog(src, re, replacer) {
 const COUNTER_TESTS = [
   { expect: 'catalog-guard-count', name: 'one "**Guard:**" line removed from the catalog',
     mutate: src => inCatalog(src, /^\*\*Guard:\*\*.*$/m, '') },
+
+  { expect: 'catalog-stamp-missing', name: 'one stamp line removed from the catalog',
+    mutate: src => inCatalog(src, /^\*\*(?:Verified|Measured)\b.*$/m, '') },
+
+  { expect: 'catalog-stamp-undated', name: 'the date taken out of a stamp line',
+    mutate: src => inCatalog(src, /^(\*\*(?:Verified|Measured)\b.*?)\b\d{4}-\d{2}(?:-\d{2})?\b/m, '$1') },
 
   { expect: 'marker-malformed', name: 'a marker with its prefix but no payload',
     mutate: src => inFirstProse(src, /<!--\s*trap-ref:[^>]*-->/, '<!-- trap-ref: -->') },
@@ -439,4 +493,10 @@ if (errors.length > 0) {
   process.exit(1);
 }
 const registers = Object.entries(measured).map(([k, v]) => `${k}=${v}`).join(', ');
-console.log(`stated counts: OK — ${seen.counts} count marker(s) against measured ${registers}; ${seen.refs} trap reference(s), ${seen.ranges} group range(s), ${catalog.guards} guard line(s) for ${catalog.entries.length} entries`);
+// Counted per entry, not per line: entry 14 carries a second stamp for its
+// second symptom, so the file holds more stamp lines than the invariant needs.
+// The surplus is printed rather than absorbed.
+const stamped = catalog.entries.filter(e => e.dated > 0).length;
+const stampLines = catalog.entries.reduce((n, e) => n + e.stamps, 0);
+const surplus = stampLines === stamped ? '' : ` (${stampLines} stamp lines in all)`;
+console.log(`stated counts: OK — ${seen.counts} count marker(s) against measured ${registers}; ${seen.refs} trap reference(s), ${seen.ranges} group range(s), ${catalog.guards} guard line(s) for ${catalog.entries.length} entries, ${stamped} stamp line(s) for ${catalog.entries.length} entries${surplus}`);
