@@ -1,0 +1,66 @@
+name: "Trap report"
+description: "A catalogued trap no longer reproduces on your version, or reproduces differently."
+title: "trap N: what it does on my machine"
+labels: ["trap-report"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Every entry in the catalog carries a verification date and the environment it
+        was stamped on. Tools change, and an entry that was true where it was measured
+        can be false one machine away — that has already happened twice here.
+
+        An issue with a repro beats an issue with an opinion, so this form asks for the
+        command line rather than for an impression. Nothing below is required reading
+        first: if a field does not apply, say so in it.
+  - type: input
+    id: trap
+    attributes:
+      label: "Which trap"
+      description: "Number and title from the catalog, e.g. 5) git grep -E is the platform's ERE."
+      placeholder: "5) git grep -E is the platform's ERE"
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: "Environment you measured on"
+      description: "OS and version, shell and version, the versions of the tools the entry names, and your Claude Code version if the trap is one of the harness ones (11-14)."
+      value: |
+        OS:
+        shell:
+        tool versions (git, grep, node, ...):
+        Claude Code:
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: "The command line you ran"
+      description: "Paste it as you ran it, including how you read the exit code. Copy-pasteable beats described."
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: observed
+    attributes:
+      label: "What you observed"
+      description: "Output and exit code, verbatim."
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: "What the entry says should happen"
+      description: "Quote the line from the catalog you are measuring against, so the disagreement is between two measurements rather than between two opinions."
+    validations:
+      required: true
+  - type: checkboxes
+    id: stamped-environment
+    attributes:
+      label: "The environment the entry stamps"
+      options:
+        - label: "I also ran it on the environment the entry stamps, and the result differed there too."
+          required: false
+        - label: "I could not run it on that environment - the report above is from mine only."
+          required: false

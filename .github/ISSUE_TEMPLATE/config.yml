@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: "The trap catalog itself"
+    url: "https://github.com/eduard-wolf/claude-code-harness-guardrails/blob/main/plugin/skills/tool-traps/SKILL.md"
+    about: "Read the entry first - each one carries the date and environment it was verified on, and what CI could not re-run is named there by number."
