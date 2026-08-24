@@ -10,8 +10,9 @@
 # not the maintainer's machine, and prints the environment it judged on. What
 # this host cannot reproduce — the Claude Code harness is on no runner, and
 # whatever shells or interpreters this image happens not to carry — comes out
-# of it named, with a number and a reason, rather than silently dropped. The
-# guard reads which is which off this runner instead of off a software list.
+# of it named, with a number and a reason, rather than silently dropped. Tool
+# presence is read off this runner rather than off a software list; what the
+# guard cannot probe for other reasons, it states, with the reason.
 name: guards
 on:
   push:

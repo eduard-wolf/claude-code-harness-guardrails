@@ -6,9 +6,13 @@
 // honest form of the claim, and it is still a claim: a dated stamp goes stale
 // silently the moment a tool changes, and nothing in the repository notices.
 // This guard is the machine behind the date. It runs each trap's *trap form*
-// and demands that the trap still happens, then runs the *guard form the
-// catalog prints for it* and demands that the trap stops happening. A probe
-// that cannot tell the two apart proves nothing about either.
+// and demands that the trap still happens, then runs *the remedy the entry
+// names against it* and demands that the trap stops happening. A probe that
+// cannot tell those two apart proves nothing about either. ("Names", not
+// "prints": entry 1's guard sentence prints an example that does not work —
+// see the finding below — so the probe runs the forms that sentence's rule
+// yields instead of its illustration, and prints the illustration's
+// measurement alongside.)
 //
 // Red is the point here, not the accident:
 //

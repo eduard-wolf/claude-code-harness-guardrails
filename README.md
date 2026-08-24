@@ -181,20 +181,20 @@ method to itself, in CI, on every push:
   historical measurements with a date and no machine — deliberately
   unmarked, because no file in this repository can re-measure them.
 - **[guards/verify-traps.mjs](guards/verify-traps.mjs)** — the dates on the
-  trap catalog stop being a promise. On every push the runner re-runs each
-  trap whose mechanism exists on a Linux host: first the form that springs
-  the trap, then the guard the entry itself prescribes against it — and an
-  entry counts as verified only when the two come out differently, because a
-  probe that cannot tell a trap from its remedy has measured neither. What
-  the runner cannot host is not quietly dropped. Traps that live inside the
-  Claude Code harness, one that would need a test runner installed, one that
-  only shows itself across a series of pushes, any whose shell or interpreter
-  that host does not carry: each is named with its number and the reason it
-  was not run, and the guard refuses to go green while any catalog entry is
-  neither probed nor explained. Its output is that list, so this README does
-  not keep a second copy of it — and if a trap ever stops reproducing, the
-  guard goes red on purpose. That is the catalog asking to be re-verified,
-  not a broken build.
+  trap catalog stop being a promise. On every push the runner re-runs every
+  trap this guard can put a probe behind: first the form that springs the
+  trap, then the remedy the entry names against it — and the entry counts as
+  verified only when the trap springs *and* the remedy stops it, because a
+  probe that cannot tell those two apart has measured neither. What it does
+  not probe is not quietly dropped. Traps that live inside the Claude Code
+  harness, one that would need a test runner installed, one that only shows
+  itself across a series of pushes, ones whose mechanism is a logic class no
+  host can vary, any whose shell or interpreter the host does not carry:
+  each is named with its number and the reason it was not run, and the guard
+  refuses to go green while any catalog entry is neither probed nor
+  explained. Its output is that list, so this README does not keep a second
+  copy of it — and if a trap ever stops reproducing, the guard goes red on
+  purpose. That is the catalog asking to be re-verified, not a broken build.
 
 All three guards run their **counter-test first** (`--self-test`): each
 proves it *can* go red before its green is accepted. A guard without a

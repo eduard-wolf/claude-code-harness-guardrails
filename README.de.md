@@ -191,20 +191,21 @@ die eigene Methode auf sich selbst an, in CI, bei jedem Push:
   unmarkiert, weil keine Datei dieses Repositories sie nachmessen kann.
 - **[guards/verify-traps.mjs](guards/verify-traps.mjs)** — die Daten am
   Fallen-Katalog hören auf, ein Versprechen zu sein. Bei jedem Push fährt der
-  Runner jede Falle nach, deren Mechanismus auf einem Linux-Host existiert:
+  Runner jede Falle nach, hinter die dieser Guard eine Probe stellen kann:
   erst die Form, die die Falle auslöst, dann das Gegenmittel, das der Eintrag
-  selbst dagegen nennt — und verifiziert ist ein Eintrag erst, wenn beide
-  verschieden ausgehen, denn eine Probe, die Falle und Gegenmittel nicht
-  unterscheiden kann, hat keines von beiden gemessen. Was der Runner nicht
-  beherbergt, fällt nicht still weg. Fallen, die im Claude-Code-Harness
+  dagegen nennt — und verifiziert ist ein Eintrag erst, wenn die Falle
+  zuschnappt *und* das Gegenmittel sie aufhält, denn eine Probe, die beides
+  nicht auseinanderhalten kann, hat keines von beiden gemessen. Was
+  ungeprüft bleibt, fällt nicht still weg. Fallen, die im Claude-Code-Harness
   leben, eine, die eine Test-Runner-Installation bräuchte, eine, die sich
-  erst über eine Reihe von Pushes zeigt, und alle, deren Shell oder
+  erst über eine Reihe von Pushes zeigt, solche, deren Mechanismus eine
+  Logikklasse ist, die kein Host variiert, und alle, deren Shell oder
   Interpreter dieser Host nicht mitbringt: Jede wird mit Nummer und Grund
   benannt, und der Guard wird nicht grün, solange ein Katalogeintrag weder
-  geprüft noch erklärt ist. Seine Ausgabe
-  ist diese Liste, deshalb führt diese README keine zweite Kopie davon — und
-  reproduziert eine Falle einmal nicht mehr, wird der Guard absichtlich rot.
-  Das ist der Katalog, der um Nachprüfung bittet, kein kaputter Build.
+  geprüft noch erklärt ist. Seine Ausgabe ist diese Liste, deshalb führt
+  diese README keine zweite Kopie davon — und reproduziert eine Falle einmal
+  nicht mehr, wird der Guard absichtlich rot. Das ist der Katalog, der um
+  Nachprüfung bittet, kein kaputter Build.
 
 Alle drei Guards fahren zuerst ihre **Gegenprobe** (`--self-test`): Jeder
 beweist, dass er rot werden *kann*, bevor sein Grün zählt. Ein Guard ohne
