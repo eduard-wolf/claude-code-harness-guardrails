@@ -124,9 +124,10 @@ date, and the guard against it. No brainstormed risks. Three samples:
 
 Knowing them is not the same as being safe from them: in the source
 corpus, two of the catalog's traps were hit *while the session's own brief
-carried the warning word for word*. Knowledge does not survive contact
-with autopilot; mechanical checks do, which is why every entry here ends
-in a guard, not in a reminder.
+carried the warning word for word* — one of them in three separate
+sessions. Knowledge does not survive contact with autopilot; mechanical
+checks do, which is why every entry here ends in a guard, not in a
+reminder.
 
 Full catalog (also the file the skill installs):
 **[plugin/skills/tool-traps/SKILL.md](plugin/skills/tool-traps/SKILL.md)**.

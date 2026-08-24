@@ -17,10 +17,11 @@ Three rules for using this catalog:
    the entry prescribes, and names the rest by number, with the reason. Its
    output, not this date, tells you which of these entries were measured
    most recently and on what.
-3. **Being warned is not enough.** In the source corpus, two traps were hit
-   *while the session's own brief carried the warning word for word*. The
-   guard line exists because knowledge does not survive contact with
-   autopilot; mechanical checks do.
+3. **Being warned is not enough.** In the source corpus, two of the traps
+   below were hit *while the session's own brief carried the warning word
+   for word* — one of them in three separate sessions, three times over in
+   one of those. The guard line exists because knowledge does not survive
+   contact with autopilot; mechanical checks do.
 
 Environment for the "verified locally" stamps below, unless an entry states
 its own: macOS 26.0.1, git 2.50.1,
@@ -133,9 +134,15 @@ check reports "command failed" instead of a count.
 
 **Verified locally 2026-08-21** (macOS, git 2.50.1): `git grep -E
 'hello\sworld'` → 0 hits, exit 1; `[[:space:]]` → hit. In the source corpus
-a new guard searched call sites with `\b…\s*\(` and reported *every* module
-clean, while the brief for that session carried the warning about exactly
-this.
+a new guard used `\b` and `\s` inside `git grep -E`, took the silent zero
+for a measurement, and went *permanently red* — a guard that always fires
+is switched off as fast as one that never fires, so which way the zero
+falls is luck rather than safety. (The first published version of this
+entry had that backwards, as "reported every module clean"; the report says
+red.) The brief for that session carried the warning about exactly this
+(result report AA-7, 2026-08-13), and two later briefs carried it while
+their sessions hit the same trap again (AA-12, 2026-08-15, three times in
+one slice; AA-15, 2026-08-17).
 
 **Re-measured in CI 2026-08-24** (ubuntu-latest, Linux 6.17, git 2.55.0,
 glibc), over the same fixture: `\s` → 1 hit, exit 0, and `\b` → 1 hit, exit
@@ -264,9 +271,10 @@ no `description` to match against" — alive under manual test, dead in the
 mode that matters.
 
 **Verified locally 2026-08-21** (Psych/YAML): hard SyntaxError. Measured in
-the source corpus on two agent definitions (js-yaml); both would have
-silently failed to load. This file's own frontmatter quotes its description
-for exactly this reason.
+the source corpus on two agent definitions (js-yaml — result report HE-2,
+2026-08-20); both would have silently failed to load, and that session's
+own brief carried the warning word for word. This file's own frontmatter
+quotes its description for exactly this reason.
 
 **Guard:** quote every frontmatter value that contains a colon; parse the
 file once (any YAML parser) before shipping it; for skills, test the

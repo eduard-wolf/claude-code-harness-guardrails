@@ -188,7 +188,7 @@ control.
 | escape-rate points 1.49 / 1.02 / 0 per 1,000 lines | result report HE-3 | changed lines in src, services, scripts per session |
 | enforced artifacts 2/2, offered 0/2 and 1/2 | meta-chain brief HE-3 | the two sessions after the HE-2 optimization |
 | corpus size 262 / 85 / 49 | counted for this repository, 2026-08-21 | recursive file count of the corpus directory |
-| 189,691 lines application TS; 174,015 lines tests in 433 files | measured for this repository, 2026-08-21 | `find src -type f \( -name '*.ts' -o -name '*.tsx' \)` excluding `__tests__/`, `*.test.*`, `*.spec.*`, `*.d.ts`, generated i18n and content collections, summed batch-safe via `cat \| wc -l`; tests = the excluded test files. Rule from the source project's metrics register (first measured 2026-07-12: 158,743 / 125,857 in 338 files — the delta is five weeks of growth) |
+| 189,691 lines application TS; 174,015 lines tests in 433 files | measured for this repository, 2026-08-21 | `find src -type f \( -name '*.ts' -o -name '*.tsx' \)` excluding `__tests__/`, `*.test.*`, `*.spec.*`, `*.d.ts`, generated i18n and content collections, summed batch-safe via `cat \| wc -l`; tests = the excluded test files. Rule from the source project's metrics register (first measured 2026-07-12: 158,743 / 125,857 in 338 files — the delta is 40 days of growth) |
 
 The corpus documents themselves are not published (see The setting). Within
 the corpus, every number above carries its measuring command and date; the

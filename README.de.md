@@ -130,9 +130,10 @@ dem Guard dagegen. Keine erdachten Risiken. Drei Kostproben:
 
 Sie zu kennen ist nicht dasselbe, wie vor ihnen sicher zu sein: Im
 Quell-Korpus wurden zwei Fallen des Katalogs ausgelöst, *während die
-Warnung wörtlich im eigenen Briefing der Session stand*. Wissen überlebt den
-Kontakt mit dem Autopiloten nicht; mechanische Prüfungen schon — deshalb
-endet hier jeder Eintrag mit einem Guard, nicht mit einer Ermahnung.
+Warnung wörtlich im eigenen Briefing der Session stand* — eine davon in
+drei verschiedenen Sessions. Wissen überlebt den Kontakt mit dem
+Autopiloten nicht; mechanische Prüfungen schon — deshalb endet hier jeder
+Eintrag mit einem Guard, nicht mit einer Ermahnung.
 
 Vollständiger Katalog (zugleich die Datei, die der Skill installiert):
 **[plugin/skills/tool-traps/SKILL.md](plugin/skills/tool-traps/SKILL.md)**
