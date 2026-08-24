@@ -52,6 +52,18 @@ cp -r claude-code-harness-guardrails/plugin/skills/tool-traps ~/.claude/skills/
 set `CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1` first. Project-local instead of
 global: copy into `.claude/skills/` of the project.)
 
+Outside Claude Code — any agent CLI:
+
+```bash
+npx skills add eduard-wolf/claude-code-harness-guardrails
+```
+
+That writes the catalog once to `.agents/skills/tool-traps/` and links it
+into the per-agent directories the CLI supports, Claude Code among them
+(verified 2026-08-24, project-local install). Traps 11 to 13 are the
+catalog's own "Claude Code harness" group and bound to this harness;
+everything else in it is tool-level and agent-agnostic.
+
 Verify the install deterministically: `/plugin` lists `tool-traps` as
 installed. Then the fun probe: ask the session to write a `git grep` with
 `\s` — it should refuse and reach for `[[:space:]]`.
