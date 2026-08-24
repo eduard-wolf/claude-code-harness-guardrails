@@ -273,15 +273,18 @@ const PROBES = [
       return {
         ok: quoted.stdout.trim() === 'N=3' && read.stdout.trim() === 'N=3'
           && lines(safeGlob.stdout).includes('after') && safeGlob.status === 0,
-        // The verdict on the entry's own illustration is read off the number it
-        // produced, not written into the sentence: if somebody fixes the
-        // catalog, this line has to stop calling it a trap by itself.
+        // This line reports the two shell forms and nothing about the catalog.
+        // It used to say "the entry prints the unquoted form", which was true
+        // when it was written and false the moment the entry was corrected —
+        // a probe describing an artifact it never reads is the same stale
+        // second register the catalog is about. Binding the verdict to the
+        // entry's text is a real change and belongs in its own slice.
         detail: '${(f)"$(...)"} → ' + quoted.stdout.trim() + ', while read → ' + read.stdout.trim()
-          + ', quoted glob → "after" printed; the entry prints ${(f)$(...)} unquoted, which gives '
+          + ', quoted glob → "after" printed; unquoted, ${(f)$(...)} gives '
           + (asPrinted.stdout.trim() || 'nothing')
           + (asPrinted.stdout.trim() === quoted.stdout.trim()
-            ? ' — the same as the quoted form, so the entry\'s example is no longer wrong here'
-            : ' — that is the trap, not the guard'),
+            ? ' — no different from the quoted form on this host'
+            : ' — that is the trap form, not the guard'),
       };
     },
   },
