@@ -50,16 +50,18 @@
 //
 //   every entry     The catalog's other unmarked promise, measured the same
 //   carries a       way. Rule 2 of its preamble says "every trap carries a
-//   dated stamp     verification date and environment"; the README, the release
-//                   notes and the issue form repeat it. Four places, and nothing
-//                   was counting. A hostile read of v1.0.0 counted by hand and
-//                   found two of fifteen entries undated: entry 3 had no stamp
-//                   line at all, entry 13 a stamp carrying a binary version and
-//                   no date. So: between an entry's heading and the next
-//                   heading there must be a line opening `**Verified` or
-//                   `**Measured` that carries a `YYYY-MM` or `YYYY-MM-DD` date.
-//                   Missing line and undated line are two errors, not one,
-//                   because they are two different repairs.
+//   dated stamp     verification date and environment", both READMEs repeat it
+//                   twice over, and the issue form sends reporters to go read
+//                   that date. Said everywhere, counted nowhere — so a hostile
+//                   read of v1.0.0 did the arithmetic this file should have
+//                   been doing and found two of fifteen entries without a date:
+//                   entry 3 with no stamp line at all, entry 13 with a stamp
+//                   carrying a binary version instead of one. So: between an
+//                   entry's heading and the next heading there must be a line
+//                   opening `**Verified` or `**Measured` that carries a
+//                   `YYYY-MM` or `YYYY-MM-DD` date. Missing line and undated
+//                   line are two errors, not one, because they are two
+//                   different repairs.
 //
 //                   The date has to sit on the stamp line itself. A reflow that
 //                   pushes it onto the next line turns this red without a
