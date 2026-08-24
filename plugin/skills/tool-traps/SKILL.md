@@ -306,38 +306,64 @@ losing content).
 storage; check `wc -lc` against 200/25,000 in a routine gate; compact at
 80 %.
 
-## 14) Multi-file `grep` and `rg` do not print files in argument order
+## 14) In a Claude Code shell, `grep` and `rg` are not the system tools
 
-**Symptom:** a verification reads `grep -o PATTERN a.md b.md` positionally
-— "the first eight lines are `a.md`" — and silently attributes half its
-findings to the wrong file. Every matched line is correct; only the
-grouping is wrong, and it changes between identical runs of the same
-command line.
+**Symptom (a), the order:** a verification reads `grep -o PATTERN a.md
+b.md` positionally ("the first eight lines are `a.md`") and silently
+attributes half its findings to the wrong file. Every matched line is
+correct; only the grouping is wrong, and it changes between identical runs
+of the same command line.
 
-**Mechanism:** in a Claude Code bash shell, `grep` and `rg` are shell
-functions from the session's shell snapshot, not the system tools: they
-run the search engines embedded in the Claude Code binary
-(`ARGV0=ugrep claude -G …`, `ARGV0=rg claude …`). `type grep` prints the
-function body; `which ugrep` finds no binary at all. The engines walk
-several files at once and print each file's block when that file is
-finished, so the order follows completion, not the command line.
+**Symptom (b), the reach:** `grep -r PATTERN .` reports absence for a file
+that is sitting right there. Everything a `.gitignore` covers is invisible
+to it, and so is everything under `.git/`. A search meant to prove "this
+string appears nowhere" proves it only for the part of the tree the
+wrapper decided to walk, and it says so with exit 1, the same way it would
+report a genuinely empty tree.
+
+**Mechanism:** both names resolve to shell functions from the session's
+shell snapshot rather than to the system tools; they run the search engines
+embedded in the Claude Code binary (`ARGV0=ugrep claude -G …`,
+`ARGV0=rg claude …`). `type grep` prints the function body; `which ugrep`
+finds no binary at all. The function does not pass your arguments through
+untouched: it prepends `--ignore-files --hidden -I --exclude-dir=.git`
+plus one exclusion per further VCS directory. `--ignore-files` applies
+every `.gitignore` it finds, with no git repository required for it to
+take effect, and `--exclude-dir=.git` drops the repository's own files.
+Only `--hidden` runs the other way, putting dotfiles back in, which is
+where the system `grep -r` has them anyway. Nothing in those flags governs
+order; `-J1` (one worker) makes the order stable, from which the engines
+evidently walk several files at once and print each file's block once that
+file is finished.
 
 **Verified locally 2026-08-24** (Claude Code 2.1.241, zsh 5.9, macOS
-26.0.1): ten identical runs of `grep -o 'section: [a-z-]*' README.md
-README.de.md` printed the *second* file's block first in 4 of 10; the same
-ten runs under `rg`, in 5 of 10. Blocks stayed contiguous in all twenty
-runs — only their order moved. Ten runs each of `command -p grep`,
-`grep -J1` and `rg --sort path` held argument order 10 of 10, re-checked
-with the arguments swapped — though for this pair argument order is not
-path order, so what `--sort path` bought was determinism, not alphabetical
-order. The trap hit the baseline check of this repository's own session
-brief, where that same command line stands in the starting-state table.
+26.0.1), symptom (a): ten identical runs of `grep -o 'section: [a-z-]*'
+README.md README.de.md` printed the *second* file's block first in 4 of
+10; the same ten runs under `rg`, in 5 of 10. Blocks stayed contiguous in
+all twenty runs; only their order moved. Ten runs each of
+`command -p grep`, `grep -J1` and `rg --sort path` held argument order 10
+of 10, re-checked with the arguments swapped, though for this pair
+argument order is not path order, so what `--sort path` bought was
+determinism rather than alphabetical order. The trap hit the baseline
+check of this repository's own session brief, where that same command line
+stands in the starting-state table.
+
+**Verified locally 2026-08-24** (same environment), symptom (b): a
+throwaway directory that is no git repository at all, a `.gitignore`
+naming `ignored`, and one planted line in four files. `command -p grep -r`
+found all four; the wrapper found two, missing `ignored/a.txt` and
+`.git/config`, and both exited 0. With the line planted *only* in the
+ignored file, the wrapper exited 1 and printed nothing while the system
+tool printed the hit. The hidden file was found by both, so `--hidden`
+is not the half that bites.
 
 **Guard:** never read multi-file search output positionally. Search one
 file per command, or group by the `file:` prefix these tools already print
-when given more than one file. If a fixed order is required, use a flag
-you have measured on your own version — and `command -p grep` when you
-want the system tool rather than the harness's.
+when given more than one file; if a fixed order is required, use a flag
+you have measured on your own version. When absence is the answer, run
+`command -p grep`, which is the system tool with system semantics. And run
+`type grep` once in any shell you are about to trust: what a name resolves
+to is itself a measurement.
 
 ---
 
