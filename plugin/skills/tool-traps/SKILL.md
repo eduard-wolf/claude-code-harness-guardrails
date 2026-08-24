@@ -107,20 +107,34 @@ checks it against a floor. Zero bytes is a verdict, not a result.
 
 ## git
 
-## 5) `git grep -E` is POSIX ERE — `\s`, `\b`, `\d` silently match nothing
+## 5) `git grep -E` is POSIX ERE — `\d` matches nothing, `\s` and `\b` change with the host
 
 **Symptom:** a perfectly reasonable-looking `git grep -E 'foo\s*\('` finds
 zero hits in a repo full of them. A check built on it stays green forever.
+The nastier shape of the same symptom: it works on the machine it was
+written on and finds nothing on the machine it runs on, or the reverse.
 
 **Mechanism:** POSIX ERE has no PCRE escapes; use `[[:space:]]`,
-`[[:digit:]]`, or `git grep -P` where available. Second trap at the same
-tool: `git grep` exits 1 on zero matches — inside `execFileSync` or `set -e`
-that *throws*, and your check reports "command failed" instead of a count.
+`[[:digit:]]`, or `git grep -P` where available. But "no PCRE escapes" is
+only true of POSIX, and `git grep -E` does not use POSIX — it uses the
+platform's regex. glibc's carries the GNU operators `\s`, `\b` and `\w`;
+the BSD one on macOS does not. `\d` is a GNU operator nowhere and matches
+nothing on both. Second trap at the same tool: `git grep` exits 1 on zero
+matches — inside `execFileSync` or `set -e` that *throws*, and your check
+reports "command failed" instead of a count.
 
-**Verified locally 2026-08-21** (git 2.50.1): `git grep -E 'hello\sworld'` →
-0 hits, exit 1; `[[:space:]]` → hit. In the source corpus a new guard
-searched call sites with `\b…\s*\(` and reported *every* module clean —
-while the warning about exactly this stood in the session's brief.
+**Verified locally 2026-08-21** (macOS, git 2.50.1): `git grep -E
+'hello\sworld'` → 0 hits, exit 1; `[[:space:]]` → hit. In the source corpus
+a new guard searched call sites with `\b…\s*\(` and reported *every* module
+clean — while the warning about exactly this stood in the session's brief.
+
+**Re-measured in CI 2026-08-24** (ubuntu-latest, Linux 6.17, git 2.55.0,
+glibc), over the same fixture: `\s` → 1 hit, exit 0, and `\b` → 1 hit, exit
+0, while `\d` → 0 hits, exit 1. The first published version of this entry
+said all three "silently match nothing". That was true where it had been
+measured and false one runner away — found by this repository's own
+verify-traps guard on its first run against a host it was not written on,
+which is the entire argument for dating these stamps and re-running them.
 
 **Guard:** POSIX classes only (or `-P`); treat exit 1 as "zero matches", not
 as failure; and give every new negative check a counter-test that must fail

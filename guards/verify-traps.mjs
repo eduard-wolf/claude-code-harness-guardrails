@@ -103,6 +103,7 @@ const BRANCHES = {
   'nothing-probed': 'not one probe ran — a green with no measurement behind it',
   'catalog-unreadable': 'the catalog this guard reads its register out of is not there',
   'duplicate-number': 'one entry number carried twice — in the catalog, or by two probes',
+  'heading-drift': 'the entry behind a probed number is no longer about the same thing',
 };
 
 // ---------------------------------------------------------------- running things
@@ -138,14 +139,28 @@ const sh = (shell, script, opts) => run(shell, ['-c', script], opts);
 
 // Git must not read the machine it happens to run on: a global gitconfig with
 // commit signing, or a different locale, would otherwise decide these probes.
-const GIT_ENV = {
-  ...process.env,
+//
+// The deletions matter more than the overrides. Inheriting GIT_DIR or
+// GIT_INDEX_FILE would point every git probe at whatever repository the
+// ambient environment names — measured on a copy: with GIT_DIR exported, the
+// probes committed three times into a foreign repository, deleted a tracked
+// file from its index, and reported "trap verification: OK". A guard that
+// writes outside its own temp directory is not a guard, and one that stays
+// green while measuring the wrong repository is the header's failure class 3
+// with a shell attached.
+const GIT_ENV = { ...process.env };
+for (const key of [
+  'GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_OBJECT_DIRECTORY',
+  'GIT_ALTERNATE_OBJECT_DIRECTORIES', 'GIT_COMMON_DIR', 'GIT_NAMESPACE',
+  'GIT_CEILING_DIRECTORIES', 'GIT_PREFIX', 'GIT_INTERNAL_SUPER_PREFIX',
+]) delete GIT_ENV[key];
+Object.assign(GIT_ENV, {
   GIT_CONFIG_GLOBAL: '/dev/null',
   GIT_CONFIG_SYSTEM: '/dev/null',
   GIT_TERMINAL_PROMPT: '0',
   LC_ALL: 'C',
   LANG: 'C',
-};
+});
 const git = (dir, args) => run('git', args, { cwd: dir, env: GIT_ENV });
 
 // CI runners carry no git identity; a commit without one fails, and the probe
@@ -180,6 +195,7 @@ const PROBES = [
   {
     n: 1,
     title: 'zsh word-splitting, and the dead glob that kills the line',
+    heading: "zsh",
     requires: ['zsh', 'bash'],
     setup: dir => write(dir, 'items.txt', 'a\nb\nc\n'),
     trap: dir => {
@@ -211,6 +227,7 @@ const PROBES = [
   {
     n: 2,
     title: 'the exit code a harness sees is the last command\'s',
+    heading: "exit",
     requires: ['bash'],
     trap: () => {
       const echoed = sh('bash', 'false; echo "EXIT=$?"');
@@ -219,10 +236,14 @@ const PROBES = [
       return {
         ok: echoed.stdout.trim() === 'EXIT=1' && echoed.status === 0 && piped.status === 0
           && (zshPipe === null || zshPipe.status === 0),
+        // An entry measured in halves has to say so on the line, not only in
+        // the half it managed: the coverage line otherwise counts this entry as
+        // fully probed on a host that never ran its second shell.
+        partial: zshPipe ? null : 'the entry\'s zsh half (${PIPESTATUS[0]} expanding to empty, and $pipestatus[1] against it) needs a zsh, and this host has none',
         detail: `false; echo "EXIT=$?" prints ${echoed.stdout.trim()} and exits ${echoed.status}; false | cat exits ${piped.status}`
           + (zshPipe
             ? `; in zsh, exit \${PIPESTATUS[0]} exits ${zshPipe.status} — the bash form expands to empty there`
-            : '; the zsh half of this entry was not measured (zsh absent)'),
+            : '; the zsh half of this entry was not measured'),
       };
     },
     guard: () => {
@@ -240,6 +261,7 @@ const PROBES = [
   {
     n: 3,
     title: '2>/dev/null on a measurement hides that it failed',
+    heading: "measurement",
     requires: ['bash', 'git'],
     setup: dir => {
       initRepo(dir);
@@ -254,9 +276,14 @@ const PROBES = [
       const broken = sh('bash', 'git grep -l NEEDLE_XYZ --untracked 2>/dev/null', opts);
       const zeroHit = sh('bash', 'git grep -l ABSENT_QQQ_PATTERN 2>/dev/null', opts);
       const truncated = sh('bash', "printf '%s\\n' a b c d e f g h i j k l m | head -5 | wc -l", opts);
+      // The exit codes must differ. Without that, two commands that failed the
+      // same way satisfy "indistinguishable" and the detail line prints its own
+      // contradiction — measured on a directory with no repository in it:
+      // ok: true beside "only the exit code still separates them (128 vs 128)".
       const indistinguishable = broken.stdout === zeroHit.stdout && broken.stderr === '' && zeroHit.stderr === '';
       return {
-        ok: indistinguishable && broken.stdout === '' && Number(truncated.stdout.trim()) === 5,
+        ok: indistinguishable && broken.stdout === '' && broken.status !== zeroHit.status
+          && Number(truncated.stdout.trim()) === 5,
         detail: `a usage error and a real zero-hit search print the same ${broken.stdout.length} bytes — only the exit code still separates them (${broken.status} vs ${zeroHit.status}); head -5 on a 13-line measurement reports ${truncated.stdout.trim()}`,
       };
     },
@@ -275,6 +302,7 @@ const PROBES = [
   {
     n: 4,
     title: 'a failed extraction looks exactly like a result',
+    heading: "extraction",
     requires: ['bash'],
     setup: dir => {
       write(dir, 'nomarkers.txt', 'line one\nline two\nline three\n');
@@ -302,16 +330,22 @@ const PROBES = [
 
   {
     n: 5,
-    title: 'git grep -E is POSIX ERE — \\s matches nothing',
+    title: 'git grep -E is POSIX ERE — and which escapes fail depends on the host',
+    heading: "POSIX",
     requires: ['git'],
     setup: dir => {
       initRepo(dir);
       write(dir, 'tracked.txt', 'hello world\nvalue 7 here\nnothing here\n');
       commitAll(dir, 'fixture');
     },
-    // All three escapes the entry names are measured, not just the one it
-    // asserts on: which of them a host's ERE understands is the whole question,
-    // and a detail line that only reports the asserted one cannot answer it.
+    // All three escapes the entry names are measured; only \d is asserted on.
+    // That split is itself a measurement: on the first CI run of this guard,
+    // \s and \b found their lines on the runner and found nothing here, because
+    // glibc's ERE carries the GNU operators and BSD's does not, while \d is a
+    // GNU operator on neither. Asserting \s would have made this probe a test
+    // of which libc the host uses. Printing all three at every push is what
+    // turned "the trap stopped reproducing" into "the trap is platform-split",
+    // and that is now in the entry.
     trap: dir => {
       const hits = pattern => {
         const r = git(dir, ['grep', '-E', pattern]);
@@ -319,16 +353,18 @@ const PROBES = [
       };
       const s = hits('hello\\sworld'), d = hits('value \\d here'), b = hits('\\bhello\\b');
       return {
-        ok: s.n === 0 && s.status === 1,
-        detail: `over "hello world" / "value 7 here": \\s → ${s.n} hit(s) exit ${s.status}, \\d → ${d.n} hit(s) exit ${d.status}, \\b → ${b.n} hit(s) exit ${b.status}`
+        ok: d.n === 0 && d.status === 1,
+        detail: `over "hello world" / "value 7 here": \\d → ${d.n} hit(s) exit ${d.status} (the escape no ERE dialect here understands, and the one this probe judges); \\s → ${s.n} hit(s) exit ${s.status}, \\b → ${b.n} hit(s) exit ${b.status} — those two are the platform split, printed rather than judged`
           + `; exit 1 for zero matches throws inside execFileSync, and reading it as "zero matches" instead of "command failed" is this entry's own second half`,
       };
     },
     guard: dir => {
-      const r = git(dir, ['grep', '-E', 'hello[[:space:]]world']);
+      const space = git(dir, ['grep', '-E', 'hello[[:space:]]world']);
+      const digit = git(dir, ['grep', '-E', 'value [[:digit:]] here']);
       return {
-        ok: r.status === 0 && r.stdout.includes('hello world'),
-        detail: `git grep -E 'hello[[:space:]]world' → ${lines(r.stdout.trim()).length} hit(s), exit ${r.status}`,
+        ok: space.status === 0 && space.stdout.includes('hello world')
+          && digit.status === 0 && digit.stdout.includes('value 7 here'),
+        detail: `the POSIX classes carry on both hosts: [[:space:]] → ${lines(space.stdout.trim()).length} hit(s) exit ${space.status}, [[:digit:]] → ${lines(digit.stdout.trim()).length} hit(s) exit ${digit.status}`,
       };
     },
   },
@@ -336,6 +372,7 @@ const PROBES = [
   {
     n: 6,
     title: 'git grep without --untracked cannot see the files you just made',
+    heading: "untracked",
     requires: ['git'],
     setup: dir => {
       initRepo(dir);
@@ -362,6 +399,7 @@ const PROBES = [
   {
     n: 8,
     title: 'ANSI colour codes defeat a grep on tool output',
+    heading: "ANSI",
     requires: ['bash', 'perl'],
     partial: 'the entry\'s second-order half — that diffing error lists *with* line numbers measures code shifts rather than new errors — needs two runs of a real tool and is not probed here',
     // The fixture is written from Node, not from printf: it has to be the same
@@ -387,6 +425,7 @@ const PROBES = [
   {
     n: 11,
     title: 'an unquoted ": " inside a YAML value is a hard parse error',
+    heading: "YAML",
     requires: ['ruby'],
     partial: 'only the parse half — that a broken agent file is skipped whole while a broken SKILL.md loads with empty metadata is Claude Code behaviour, and there is no binary on this host to measure it against',
     trap: () => {
@@ -455,14 +494,21 @@ const envLine = () => 'environment: ' + [
 
 // `## N)` is an entry. Fenced blocks are skipped: entry 15 is about regexes
 // that cannot tell code from prose, and reading Markdown line by line is one.
-function catalogNumbers(text) {
+//
+// Headings come back with the numbers, because a number on its own is a weak
+// binding. Measured on a copy: rewriting entry 5 into a different subject
+// whose remedy recommends the trap form left this guard reporting "trap 5:
+// reproduced | guard holds" and exiting 0 — failure class 5 committed by the
+// file whose header warns about it. Each probe now also names a word its
+// entry's heading has to contain, the same shape as the READMEs' trap-refs.
+function catalogEntries(text) {
   const found = [];
   let inFence = false;
   for (const line of lines(text.replace(/\r\n?/g, '\n'))) {
     if (/^\s*```/.test(line)) { inFence = !inFence; continue; }
     if (inFence) continue;
-    const m = /^## (\d+)\)/.exec(line);
-    if (m) found.push(Number(m[1]));
+    const m = /^## (\d+)\)\s*(.*)$/.exec(line);
+    if (m) found.push({ n: Number(m[1]), title: m[2].trim() });
   }
   return found;
 }
@@ -494,22 +540,28 @@ function observe(probe) {
 // against: exit 1 is correct, but "readFileUtf8" is not a diagnosis.
 function measure() {
   detect();
-  let numbers = [], catalogError = null;
+  let entries = [], catalogError = null;
   try {
-    numbers = catalogNumbers(readFileSync(join(ROOT, CATALOG), 'utf8'));
+    entries = catalogEntries(readFileSync(join(ROOT, CATALOG), 'utf8'));
   } catch (e) {
     catalogError = e && e.message ? e.message : String(e);
   }
+  const titles = {};
+  for (const e of entries) if (!(e.n in titles)) titles[e.n] = e.title;
   return {
-    numbers,
+    numbers: entries.map(e => e.n),
+    titles,
     catalogError,
-    probes: PROBES.map(p => ({ n: p.n, title: p.title, partial: p.partial || null, obs: observe(p) })),
+    probes: PROBES.map(p => ({
+      n: p.n, title: p.title, heading: p.heading, partial: p.partial || null, obs: observe(p),
+    })),
     skipped: { ...SKIPPED },
   };
 }
 
 const clone = s => ({
   numbers: [...s.numbers],
+  titles: { ...s.titles },
   catalogError: s.catalogError,
   probes: s.probes.map(p => ({
     ...p,
@@ -568,6 +620,13 @@ function judge(state) {
   for (const p of state.probes) {
     if (!state.numbers.includes(p.n)) {
       fail('no-such-entry', `a probe claims trap ${p.n} and ${CATALOG} has no entry "## ${p.n})" — the catalog moved, and this guard is measuring a number that is gone`);
+      continue;
+    }
+    // Whole word, not substring — the counts guard learned that one the hard
+    // way, where "a" matched almost any heading.
+    const title = state.titles[p.n] || '';
+    if (p.heading && !new RegExp(`\\b${p.heading}\\b`, 'i').test(title)) {
+      fail('heading-drift', `the probe for trap ${p.n} expects "${p.heading}" as a word in that entry's heading, and entry ${p.n} now reads "${title}" — the number survived, the subject behind it did not, and a probe bound to the number alone would have stayed green`);
     }
   }
   for (const n of Object.keys(state.skipped).map(Number)) {
@@ -613,11 +672,14 @@ function judge(state) {
       if (!obs.guard.ok) {
         fail('guard-does-not-hold', `the guard for trap ${n} does not hold on ${where} — the entry recommends a remedy that no longer works. Measured: ${obs.guard.detail}`);
       }
+      // Partial coverage is declared statically by the probe and, where a host
+      // decides it, by the half that could not run.
+      const partials = [p.partial, obs.trap.partial, obs.guard.partial].filter(Boolean);
       report.push({
         n,
         text: `trap ${String(n).padStart(2)}: ${obs.trap.ok ? 'reproduced' : 'NOT REPROD'} — ${obs.trap.detail}`
           + ` | ${obs.guard.ok ? 'guard holds' : 'GUARD FAILS'}: ${obs.guard.detail}`
-          + (p.partial ? ` | partial: ${p.partial}` : ''),
+          + (partials.length ? ` | partial: ${partials.join('; ')}` : ''),
       });
     }
   }
@@ -665,6 +727,17 @@ const STRUCTURAL_TESTS = [
       const out = clone(state);
       if (out.probes.length === 0) return { state: out, applied: false };
       out.skipped[out.probes[0].n] = 'a reason long enough to look like a real one';
+      return { state: out, applied: true };
+    },
+  },
+  {
+    expect: 'heading-drift',
+    name: 'the entry behind a probed number rewritten to another subject',
+    mutate: state => {
+      const out = clone(state);
+      const p = out.probes.find(q => q.heading && out.numbers.includes(q.n));
+      if (!p) return { state: out, applied: false };
+      out.titles[p.n] = 'something else entirely';
       return { state: out, applied: true };
     },
   },
@@ -786,10 +859,38 @@ if (process.argv.includes('--self-test')) {
   const { tests, withheld } = counterTests(state);
   let passed = 0;
 
+  // A run that is already red has delivered the proof the self-test exists to
+  // extract: this guard can go red, and it did, here, now. What it may not do
+  // in that state is argue with itself and exit before saying why — measured
+  // twice, on a host with no shells at all and on one where every probe threw:
+  // the log named a counter-test that "found nothing to falsify" and never
+  // named the finding underneath. So while the untouched run is red, a
+  // counter-test that cannot be constructed is withheld and listed rather than
+  // fatal, and the report below does the gating. While the untouched run is
+  // green, nothing is withheld on this account: every branch must still be
+  // proved, or the green is a claim.
+  const alreadyRed = base.errors.length > 0;
+
   for (const [i, test] of tests.entries()) {
     const label = `${i + 1}/${tests.length} "${test.name}"`;
+    // A branch that is firing in the untouched run cannot be made to raise a
+    // *new* error, and does not need to be: it is already proved reachable, by
+    // the run itself. Planting it anyway raises the error that is already in
+    // the baseline, the diff comes back empty, and the self-test fails for the
+    // one reason that is not a defect.
+    if (firing.has(test.expect)) {
+      withheld.push(`${test.expect} (already firing in this run — the report below is its proof)`);
+      continue;
+    }
     const { state: falsified, applied } = test.mutate(state);
     if (!applied) {
+      // "Cannot synthesize X" is only a failure while the guard is otherwise
+      // green. Run 32744393366 aborted here and the finding underneath — trap
+      // 5 gone on that host — never reached the log.
+      if (alreadyRed) {
+        withheld.push(`${test.expect} (not constructible on this host — nothing left to plant)`);
+        continue;
+      }
       console.error(`SELF-TEST FAILED: counter-test ${label} found nothing to falsify.`);
       console.error('The check it belongs to is unreachable — most likely the probe it inverts recorded nothing at all.');
       process.exit(1);
@@ -809,13 +910,15 @@ if (process.argv.includes('--self-test')) {
   // A branch already firing in the untouched run needs no synthetic proof that
   // it can fire; it is firing. Anything else without a counter-test is a claim.
   const uncovered = Object.keys(BRANCHES).filter(code => !tests.some(t => t.expect === code) && !firing.has(code));
-  if (uncovered.length > 0) {
+  if (uncovered.length > 0 && !alreadyRed) {
     console.error(`SELF-TEST FAILED: ${uncovered.length} error branch(es) with neither a counter-test nor a live finding: ${uncovered.join(', ')}`);
     console.error('An untested branch is a claim. Add its counter-test before trusting the guard.');
     process.exit(1);
   }
+  for (const code of uncovered) withheld.push(`${code} (branch unproved on this host)`);
 
-  console.log(`self-test: OK — ${passed} of ${tests.length} counter-tests raised an error of their own, covering ${Object.keys(BRANCHES).length} error branches`
+  const verdict = withheld.length === 0 ? 'OK' : 'OK, in part';
+  console.log(`self-test: ${verdict} — ${passed} of ${tests.length} counter-tests raised an error of their own, covering ${Object.keys(BRANCHES).length - uncovered.length} of ${Object.keys(BRANCHES).length} error branches`
     + (withheld.length > 0 ? `; ${withheld.length} withheld: ${withheld.join(', ')}` : ''));
 }
 
