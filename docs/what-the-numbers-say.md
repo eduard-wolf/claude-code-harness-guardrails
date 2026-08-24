@@ -11,8 +11,7 @@ security SaaS: 189,691 lines of application TypeScript and 174,015 lines of
 test code in 433 test files (measured 2026-08-21; counting rule below),
 developed almost entirely through briefed, autonomous Claude Code sessions.
 Its review chain comprises 262 files, including 85 session briefs and 49
-result reports (counted 2026-08-21, recursively, in the corpus
-directory).
+result reports (counted 2026-08-21, recursively, in the corpus directory).
 
 In August 2026 a meta-chain of sessions turned the method on itself: it
 measured the harness instead of the product. The numbers below are from
@@ -89,10 +88,10 @@ before-push; n = 3 — no trend yet, but counted from now on).
   and the file regrows by ~6,200 characters per session. The source's own
   verdict: the cut "bought time, built no mechanism."
 - **Of 69 coverage promises in 9 guard files, 3 were empty and 2 narrowed.**
-  One guard surface had been "a promise about nothing" for nineteen
-  sessions: its extension filter matched zero files in the directory it
-  claimed to scan. Found only when the promises themselves were measured
-  against the file system.
+  One guard surface had been "a promise about nothing" for 19 sessions: its
+  extension filter matched zero files in the directory it claimed to scan.
+  Found only when the promises themselves were measured against the file
+  system.
 - **21 defects of one session's own making: 0 found by reading.** 9 were
   found by the session's own guard and measurement runs, 12 by its
   adversarial review gate. (The first version of this very count was
@@ -140,8 +139,7 @@ itself that did not survive verification:
 - a guard example valid in bash but silently inert in the catalog's own
   stamped shell, `${PIPESTATUS[0]}` under zsh;
 - a "skeletons sit unexecuted" claim the corpus git log refutes: the
-  sessions ran, on hand-expanded briefs eleven to twenty-three times the
-  skeleton's size;
+  sessions ran, on hand-expanded briefs 11 to 23 times the skeleton's size;
 - a generation table whose classification rule was not stated and whose
   fragile rows an independent reproduction could not confirm.
 
@@ -177,7 +175,7 @@ claims, one of them on a host the author does not control.
 
 | Number | Source | Population |
 |---|---|---|
-| t ≈ 1.9, p ≈ 0.12; one pre-value below both post-values | meta-chain brief HE-3, verbatim | 2 post-optimization sessions vs. pre-series (pre-series not durably documented) |
+| t ≈ 1.9, p ≈ 0.12; one pre-value below both post-values | meta-chain brief HE-3, verbatim | 2 post-optimization sessions vs. pre-series (pre-series never written down) |
 | 4 stale numbers stopped by CI; 4 caught pre-push | result reports RE-3b, HE-3 | living briefs at push time |
 | 62% pushes without run | result report HE-1 | 157 pushes / 11 days, `gh run list` |
 | −25.0% cut; 44.6% mixed units; ~6,200 chars/session regrowth | brief + result report HE-2 | context file, 181,534 chars, 340 units |

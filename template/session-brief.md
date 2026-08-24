@@ -11,9 +11,9 @@
   pattern was distilled from (as pre-written "skeleton" briefs) and it
   failed: the expensive parts (verified paths, exact commands, known traps)
   were deferred to a pre-session expansion that then had to be done by hand,
-  every time, at eleven to twenty-three times the skeleton's size (measured).
-  The chain form fixes that structurally: the previous session writes the
-  next brief at the end of its own run.
+  every time, at 11 to 23 times the skeleton's size (measured). The chain
+  form fixes that structurally: the previous session writes the next brief
+  at the end of its own run.
 
   Everything in [brackets] is a placeholder. Sections marked (optional) can
   be dropped for small tasks. Keep the rest - each section exists because

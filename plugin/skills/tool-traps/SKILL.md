@@ -126,7 +126,7 @@ check reports "command failed" instead of a count.
 **Verified locally 2026-08-21** (macOS, git 2.50.1): `git grep -E
 'hello\sworld'` → 0 hits, exit 1; `[[:space:]]` → hit. In the source corpus
 a new guard searched call sites with `\b…\s*\(` and reported *every* module
-clean, while the warning about exactly this stood in the session's brief.
+clean, while the warning about exactly this sat in the session's brief.
 
 **Re-measured in CI 2026-08-24** (ubuntu-latest, Linux 6.17, git 2.55.0,
 glibc), over the same fixture: `\s` → 1 hit, exit 0, and `\b` → 1 hit, exit
@@ -347,7 +347,7 @@ of 10, re-checked with the arguments swapped, though for this pair
 argument order is not path order, so what `--sort path` bought was
 determinism rather than alphabetical order. The trap hit the baseline
 check of this repository's own session brief, where that same command line
-stands in the starting-state table.
+sits in the starting-state table.
 
 **Verified locally 2026-08-24** (same environment), symptom (b): a
 throwaway directory that is no git repository at all, a `.gitignore`
@@ -355,8 +355,7 @@ naming `ignored`, and one planted line in four files. `command -p grep -r`
 found all four; the wrapper found two, missing `ignored/a.txt` and
 `.git/config`, and both exited 0. With the line planted *only* in the
 ignored file, the wrapper exited 1 and printed nothing while the system
-tool printed the hit. The hidden file was found by both, so `--hidden`
-is not the half that bites.
+tool printed the hit. The hidden file was found by both.
 
 **Guard:** never read multi-file search output positionally. Search one
 file per command, or group by the `file:` prefix these tools already print

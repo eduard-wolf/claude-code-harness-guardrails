@@ -145,8 +145,8 @@ session writing the next brief.
 The counterintuitive core, measured in the corpus: **the brief is a chain
 output, not a human input.** Pre-written skeleton templates failed there:
 not one was ever run as written, and each first had to be hand-expanded to
-eleven to twenty-three times its size. Briefs written by the outgoing
-session, while its knowledge is fresh and measured, carried the chain. The
+11 to 23 times its size. Briefs written by the outgoing session, while its
+knowledge is fresh and measured, carried the chain. The
 template here is a *seed* for the first brief, not a form to fill per
 session.
 

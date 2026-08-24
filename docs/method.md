@@ -11,8 +11,8 @@ the setting) contains three generations of briefing documents. The cohorts:
 82 first-generation "goal files" (by filename prefix), plus the 85 briefs
 split by first-git-commit date into 19 early briefs (June–July 2026) and 66
 chain-era briefs (August 2026), so the table below spans 167 documents, of
-which the 85 briefs carry the pattern. Counted 2026-08-21. Only
-rows whose counting rule is a one-line grep over `## `-level headings are
+which the 85 briefs carry the pattern. Counted 2026-08-21. Only rows whose
+counting rule is a one-line grep over `## `-level headings are
 printed; an earlier version of this table carried classifier-dependent rows
 that an independent reproduction could not confirm, so they are gone:
 
@@ -24,9 +24,9 @@ that an independent reproduction could not confirm, so they are gone:
 | Median file size (`wc -c`) | 15.5 KB | 6.9 KB | 19.2 KB |
 | Median warning glyphs (`⚠` count) | 0 | 1 | 4 |
 
-The numbers show two things. First, the form *shrank* before it
-grew: generation 2 briefs are half the size of generation 1, because the
-task specification moved out of the prompt and into verified references.
+The numbers show two things. First, the form *shrank* before it grew:
+generation 2 briefs are half the size of generation 1, because the task
+specification moved out of the prompt and into verified references.
 Second, three of the mature form's defining sections — guardrails, the trap
 catalog, owner decisions — appear in zero of the 101 pre-August documents
 and in 43, 26, and 24 of the 66 August briefs. (Mission, non-goals, gate,
@@ -41,10 +41,10 @@ measured. The corpus also contains the instructive middle form: five
 pre-written "skeleton" briefs that deferred the expensive parts (verified
 paths, exact commands, known traps) to a "flesh out before session start".
 The sessions all ran, but not one ran a skeleton as written: each skeleton
-first had to be expanded by hand into a full brief eleven to twenty-three
-times its size (measured 2026-08-21 on the three pairs that sit side by side
-in the corpus: 4.5→49.8 KB, 3.3→76.2 KB, 3.7→64.4 KB). The skeleton saved
-nothing; the expensive work moved to an unplanned rewrite, every time.
+first had to be expanded by hand into a full brief 11 to 23 times its size
+(measured 2026-08-21 on the three pairs that sit side by side in the corpus:
+4.5→49.8 KB, 3.3→76.2 KB, 3.7→64.4 KB). The skeleton saved nothing; the
+expensive work moved to an unplanned rewrite, every time.
 Top-down templates lost to bottom-up handoffs. That is why this repository
 ships a *seed* template, not a form to fill in per session.
 
@@ -154,8 +154,7 @@ hypothetical. Condensed; populations in
 2. **Hand-counted values.** Wrong even inside the report about wrong
    numbers (8/4/15 → re-measured 10/9/12). Numbers come from commands.
 3. **Empty coverage promises.** A check that scans nothing looks exactly
-   like a check that passes ("a promise about nothing" for nineteen
-   sessions). Promises need to be measured against the file system.
+   like a check that passes ("a promise about nothing" for 19 sessions). Promises need to be measured against the file system.
 4. **Silent tool failures.** Zero-hit regex dialects, swallowed exit codes,
    empty extractions, reporter fields contradicting exit codes — the whole
    [trap catalog](../plugin/skills/tool-traps/SKILL.md).
