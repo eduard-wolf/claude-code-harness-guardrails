@@ -105,6 +105,7 @@ const BRANCHES = {
   'catalog-unreadable': 'the catalog this guard reads its register out of is not there',
   'duplicate-number': 'one entry number carried twice — in the catalog, or by two probes',
   'heading-drift': 'the entry behind a probed number is no longer about the same thing',
+  'guard-text-drift': "a probe's printed claim about its entry no longer matches the entry",
   'heading-malformed': 'a heading that is nearly an entry heading, and so is counted as none',
   'required-tool-missing': 'a tool this run was told the host must have is not here',
 };
@@ -253,6 +254,18 @@ const PROBES = [
     n: 1,
     title: 'zsh word-splitting, and the dead glob that kills the line',
     heading: 'zsh',
+    // What the guard half below actually executes, and therefore what entry 1's
+    // remedy paragraph still has to name. `heading` binds the probe to the
+    // entry's subject; this binds it to the entry's *advice*. Without it the
+    // number can match, the heading can match, and the sentence underneath can
+    // recommend something this probe never runs — a name-pinned guard (failure
+    // class 5) one level in. `neverNames` is the other direction: the unquoted
+    // form is the trap, and an entry that offers it as the remedy has rebuilt
+    // what it teaches. It did once; see the finding at the top of this file.
+    remedy: {
+      names: ['${(f)"$(...)"}', 'while read'],
+      neverNames: ['${(f)$(...)}'],
+    },
     requires: ['zsh', 'bash', 'cat'],
     setup: dir => write(dir, 'items.txt', 'a\nb\nc\n'),
     trap: dir => {
@@ -295,6 +308,7 @@ const PROBES = [
     title: 'the exit code a harness sees is the last command\'s',
     heading: 'exit',
     requires: ['bash', 'cat'],
+    anchors: ['print first, judge second'],
     partial: 'the entry\'s closing advice — if you must print, print first and judge second — is a practice rather than a command, so nothing here executes it',
     trap: () => {
       const echoed = sh('bash', 'false; echo "EXIT=$?"');
@@ -406,6 +420,7 @@ const PROBES = [
     title: 'git grep -E uses the platform ERE — and which escapes fail depends on the host',
     heading: 'POSIX',
     requires: ['git'],
+    anchors: ['give every new negative check a counter-test that must fail', 'plant one match, expect red'],
     partial: 'the entry also tells you to counter-test every new negative check by planting a match — a practice rather than a command, and not something this probe can run on your behalf',
     setup: dir => {
       initRepo(dir);
@@ -459,6 +474,7 @@ const PROBES = [
     // fixture that never committed — and then the probe reports the trap
     // reproducing for a reason that has nothing to do with the trap. So the
     // same search must find the committed file in the same breath.
+    anchors: ["name the search surface in the check's output", 'node_modules'],
     partial: 'the entry\'s second half — name the search surface in the check\'s own output — is a practice rather than a command, and its node_modules corollary needs a repository this probe does not build',
     trap: dir => {
       const control = git(dir, ['grep', '-l', 'nothing of interest']);
@@ -483,6 +499,7 @@ const PROBES = [
     title: 'ANSI colour codes defeat a grep on tool output',
     heading: 'ANSI',
     requires: ['bash', 'perl', 'grep'],
+    anchors: ['diffing error lists *with line numbers* measures code shifts, not new'],
     partial: 'the entry\'s second-order half — that diffing error lists *with* line numbers measures code shifts rather than new errors — needs two runs of a real tool and is not probed here',
     // The fixture is written from Node, not from printf: it has to be the same
     // bytes under bash 3.2 and bash 5, and \033 versus \e is precisely the kind
@@ -509,6 +526,7 @@ const PROBES = [
     title: 'an unquoted ": " inside a YAML value is a hard parse error',
     heading: 'YAML',
     requires: ['ruby'],
+    anchors: ['is skipped entirely', 'loads the skill body with empty metadata'],
     partial: 'only the parse half — that a broken agent file is skipped whole while a broken SKILL.md loads with empty metadata is Claude Code behaviour, and there is no binary on this host to measure it against',
     trap: () => {
       const r = runRuby('description: Use when: always');
@@ -615,6 +633,26 @@ function requiredTools(argv) {
 // file whose header warns about it. Each probe now also names a word its
 // entry's heading has to contain, the same shape as the READMEs' trap-refs.
 //
+// The same binding, one layer down, on what a probe *says* rather than what it
+// runs (`guard-text-drift`). Two shapes, both learned by committing them here:
+//
+//   The remedy. A probe executes forms; the entry recommends forms; nothing
+//   held the two together. Entry 1's probe runs the quoted array form, so
+//   entry 1's remedy paragraph has to still name it — and must not name the
+//   unquoted one, which is the trap. Measured: rewriting that paragraph back to
+//   the trap form now raises two errors and exits 1, where before it changed
+//   nothing at all.
+//
+//   The coverage note. A `partial` line tells the reader which half of an entry
+//   went unprobed by quoting that half. Five of them did so from memory: true
+//   when written, silently false one catalog edit later — this file's own
+//   version of the stale second register it exists to catch. Each now names the
+//   phrase it leans on, compared whitespace-squashed so a reflow is not drift.
+//
+// Printed verdicts are quoted out of the entry (`entry names: …` comes from the
+// remedy paragraph's own code spans). Header comments may describe the catalog;
+// printed claims may not.
+//
 // A heading that is nearly an entry heading is louder than one that is missing
 // — the lesson check-counts.mjs learned about markers, one file over. `### 16)`
 // and `##  7)` (two spaces) both fail the exact form, and both used to simply
@@ -622,16 +660,44 @@ function requiredTools(argv) {
 // `no-such-entry` about a number that is right there in the file.
 function catalogEntries(text) {
   const found = [], malformed = [];
-  let inFence = false;
+  let inFence = false, current = null, collecting = false;
   lines(text.replace(/\r\n?/g, '\n')).forEach((line, i) => {
     if (/^\s*```/.test(line)) { inFence = !inFence; return; }
     if (inFence) return;
     const exact = /^## (\d+)\)\s*(.*)$/.exec(line);
-    if (exact) { found.push({ n: Number(exact[1]), title: exact[2].trim() }); return; }
-    if (/^#{1,6}\s*\d+\s*\)/.test(line)) malformed.push({ line: i + 1, text: flat(line) });
+    if (exact) {
+      current = { n: Number(exact[1]), title: exact[2].trim(), guardText: null, body: '' };
+      collecting = false;
+      found.push(current);
+      return;
+    }
+    if (/^#{1,6}\s*\d+\s*\)/.test(line)) { malformed.push({ line: i + 1, text: flat(line) }); return; }
+    if (!current) return;
+    current.body += line + '\n';
+    // The remedy paragraph, verbatim: `**Guard:**` up to the blank line after
+    // it. Only the first one per entry — check-counts.mjs holds the invariant
+    // that there is exactly one, so a second would be its finding, not this
+    // file's, and taking the first keeps the two guards from disagreeing.
+    if (!collecting && current.guardText === null && /^\*\*Guard:\*\*/.test(line)) {
+      collecting = true; current.guardText = line; return;
+    }
+    if (collecting) {
+      if (line.trim() === '') { collecting = false; return; }
+      current.guardText += '\n' + line;
+    }
   });
   return { found, malformed };
 }
+
+// The inline-code spans of a remedy paragraph, in the order the entry prints
+// them. What a probe says it verified is quoted out of this, never written
+// beside it — the whole point of reading the entry rather than remembering it.
+const codeSpans = text => [...String(text || '').matchAll(/`([^`]+)`/g)].map(m => m[1]);
+
+// Anchors are compared against whitespace-squashed text on both sides. A
+// reflow is not drift, and a guard that goes red at a line break is one a
+// maintainer learns to loosen.
+const squash = text => String(text || '').replace(/\s+/g, ' ').trim();
 
 // ---------------------------------------------------------------- measuring
 
@@ -668,17 +734,23 @@ function measure() {
   } catch (e) {
     catalogError = e && e.message ? e.message : String(e);
   }
-  const titles = {};
-  for (const e of entries) if (!(e.n in titles)) titles[e.n] = e.title;
+  const titles = {}, entryGuards = {}, entryBodies = {};
+  for (const e of entries) if (!(e.n in titles)) {
+    titles[e.n] = e.title; entryGuards[e.n] = e.guardText; entryBodies[e.n] = e.body;
+  }
   return {
     numbers: entries.map(e => e.n),
     titles,
+    entryGuards,
+    entryBodies,
     malformed,
     catalogError,
     have: { ...HAVE },
     required: requiredTools(process.argv),
     probes: PROBES.map(p => ({
       n: p.n, title: p.title, heading: p.heading, requires: [...(p.requires || [])],
+      remedy: p.remedy ? { names: [...p.remedy.names], neverNames: [...p.remedy.neverNames] } : null,
+      anchors: [...(p.anchors || [])],
       partial: p.partial || null, obs: observe(p),
     })),
     skipped: { ...SKIPPED },
@@ -688,12 +760,16 @@ function measure() {
 const clone = s => ({
   numbers: [...s.numbers],
   titles: { ...s.titles },
+  entryGuards: { ...s.entryGuards },
+  entryBodies: { ...s.entryBodies },
   malformed: s.malformed.map(m => ({ ...m })),
   have: { ...s.have },
   required: [...s.required],
   catalogError: s.catalogError,
   probes: s.probes.map(p => ({
     ...p,
+    remedy: p.remedy ? { names: [...p.remedy.names], neverNames: [...p.remedy.neverNames] } : null,
+    anchors: [...(p.anchors || [])],
     obs: {
       ...p.obs,
       trap: p.obs.trap && { ...p.obs.trap },
@@ -772,6 +848,34 @@ function judge(state) {
     if (p.heading && !new RegExp(`\\b${p.heading}\\b`, 'i').test(title)) {
       fail('heading-drift', `the probe for trap ${p.n} expects "${p.heading}" as a word in that entry's heading, and entry ${p.n} now reads "${title}" — the number survived, the subject behind it did not, and a probe bound to the number alone would have stayed green`);
     }
+    if (p.remedy) {
+      const paragraph = state.entryGuards[p.n];
+      if (!paragraph) {
+        fail('guard-text-drift', `the probe for trap ${p.n} verifies the remedy that entry names, and entry ${p.n} has no **Guard:** paragraph to name one — there is nothing here to hold the probe to`);
+      } else {
+        for (const form of p.remedy.names) {
+          if (!paragraph.includes(form)) {
+            fail('guard-text-drift', `the probe for trap ${p.n} runs ${form} as the remedy, and entry ${p.n} no longer names it — the probe would keep proving an old sentence works while the catalog recommends a new one. Entry reads: ${flat(paragraph)}`);
+          }
+        }
+        for (const form of p.remedy.neverNames) {
+          if (paragraph.includes(form)) {
+            fail('guard-text-drift', `entry ${p.n} names ${form} in its remedy, and that is the trap form this probe measures against — the entry is rebuilding what it teaches. Entry reads: ${flat(paragraph)}`);
+          }
+        }
+      }
+    }
+    // A `partial` line tells the reader which half of the entry went unprobed,
+    // by quoting it. That is a printed claim about a document this file used to
+    // never open — accurate when written, silently false one edit later. Each
+    // such probe names the phrase its partial line leans on, and the phrase has
+    // to still be in the entry.
+    const flatBody = squash(state.entryBodies[p.n]);
+    for (const phrase of p.anchors) {
+      if (!flatBody || !flatBody.includes(squash(phrase))) {
+        fail('guard-text-drift', `the probe for trap ${p.n} prints a coverage note quoting "${phrase}" from that entry, and entry ${p.n} no longer contains it — the note describes a catalog that has moved`);
+      }
+    }
   }
   for (const n of Object.keys(state.skipped).map(Number)) {
     if (!state.numbers.includes(n)) {
@@ -820,10 +924,16 @@ function judge(state) {
       // Partial coverage is declared statically by the probe and, where a host
       // decides it, by the half that could not run.
       const partials = [p.partial, obs.trap.partial, obs.guard.partial].filter(Boolean).map(flat);
+      // Quoted out of the entry, not written beside it: if the catalog changes
+      // its advice, this clause changes with it or `guard-text-drift` fires.
+      const named = p.remedy
+        ? codeSpans(state.entryGuards[p.n]).filter(c => p.remedy.names.some(f => c.includes(f)))
+        : [];
       report.push({
         n,
         text: `trap ${String(n).padStart(2)}: ${obs.trap.ok ? 'reproduced' : 'NOT REPROD'} — ${trapDetail}`
           + ` | ${obs.guard.ok ? 'guard holds' : 'GUARD FAILS'}: ${guardDetail}`
+          + (named.length ? ` | entry names: ${named.map(flat).join(', ')}` : '')
           + (partials.length ? ` | partial: ${partials.join('; ')}` : ''),
       });
     }
@@ -910,6 +1020,42 @@ const STRUCTURAL_TESTS = [
       const p = out.probes.find(q => q.heading && out.numbers.includes(q.n));
       if (!p) return { state: out, applied: false };
       out.titles[p.n] = 'something else entirely';
+      return { state: out, applied: true };
+    },
+  },
+  {
+    expect: 'guard-text-drift',
+    name: "the remedy a probe runs taken out of the entry's own guard paragraph",
+    mutate: state => {
+      const out = clone(state);
+      const p = out.probes.find(q => q.remedy && out.entryGuards[q.n]
+        && q.remedy.names.some(f => out.entryGuards[q.n].includes(f)));
+      if (!p) return { state: out, applied: false };
+      const form = p.remedy.names.find(f => out.entryGuards[p.n].includes(f));
+      out.entryGuards[p.n] = out.entryGuards[p.n].split(form).join('some other advice');
+      return { state: out, applied: true };
+    },
+  },
+  {
+    expect: 'guard-text-drift',
+    name: 'the trap form offered as the remedy in the entry that teaches against it',
+    mutate: state => {
+      const out = clone(state);
+      const p = out.probes.find(q => q.remedy && q.remedy.neverNames.length && out.entryGuards[q.n]);
+      if (!p) return { state: out, applied: false };
+      out.entryGuards[p.n] += ` or ${p.remedy.neverNames[0]}`;
+      return { state: out, applied: true };
+    },
+  },
+  {
+    expect: 'guard-text-drift',
+    name: 'the half an entry leaves unprobed deleted out of the entry itself',
+    mutate: state => {
+      const out = clone(state);
+      const p = out.probes.find(q => q.anchors.length && out.entryBodies[q.n]
+        && q.anchors.some(a2 => out.entryBodies[q.n].replace(/\s+/g, ' ').includes(a2.replace(/\s+/g, ' '))));
+      if (!p) return { state: out, applied: false };
+      out.entryBodies[p.n] = 'the entry, rewritten past every phrase its coverage note quotes';
       return { state: out, applied: true };
     },
   },
