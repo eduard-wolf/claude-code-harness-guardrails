@@ -214,6 +214,19 @@ schrieben den Code und die Briefings; der menschliche Anteil ist die
 Methode, die Wahl dessen, was gemessen wird, das Urteil darüber, was trägt
 und was Ritual ist — und jeder Push. MIT-Lizenz.
 
+Der naheliegende Einwand schreibt sich von selbst: ein KI-geschriebener
+Korpus als Beleg für eine Methode über KI-Sessions. Die Antwort hier heißt
+Trennung, nicht Zusicherung. Der Push ist ein Fall davon — eine Session
+bereitet ihn vor, ein Mensch entscheidet ihn. Eine Ebene tiefer, im
+Quellprojekt, aus dem das hier destilliert ist, ist Prüfung genauso von
+Erzeugung getrennt: Ein adversariales Review-Gate liest die Arbeit mit
+frischem Kontext, und die *eigene* Fehlerquote dieses Gates wird gemessen
+statt geschätzt. Diese Kennzahl und ihre benannten Grenzen — sie trennt
+Selbstauskunft von Fremdbefund, sie löst die Mehrdeutigkeit nicht auf —
+stehen in [docs/what-the-numbers-say.md](docs/what-the-numbers-say.md)
+(englisch), das Muster und der Vergleich zu Anthropics Harness-Literatur
+in [docs/method.md](docs/method.md) (englisch).
+
 Fallen-Verifikationen sind datiert (letzter voller Durchgang: 2026-08-21).
 Werkzeuge ändern sich; reproduziert eine Falle auf deiner Version nicht
 mehr, ist das ein Befund — ein Issue mit Repro schlägt ein Issue mit

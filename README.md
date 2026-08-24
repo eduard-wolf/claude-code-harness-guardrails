@@ -205,6 +205,19 @@ the human part is the method, the choice of what gets measured, the
 judgment about what carries and what is ritual — and every push. MIT
 license.
 
+The obvious objection writes itself: an AI-written corpus as the evidence
+for a method about AI sessions. The answer here is separation, not
+assurance. The push is one instance of it — a session prepares it, a human
+decides it. One level deeper, in the source project this is distilled
+from, evaluation is separated from generation the same way: an adversarial
+review gate reads the work with fresh context, and the gate's *own* miss
+rate is measured instead of estimated. That metric and its stated limits —
+it separates self-report from external finding, it does not resolve the
+ambiguity — are in
+[docs/what-the-numbers-say.md](docs/what-the-numbers-say.md); the pattern
+and its comparison to Anthropic's harness literature are in
+[docs/method.md](docs/method.md).
+
 Trap verifications are dated (last full pass: 2026-08-21). Tools change; if
 a trap no longer reproduces on your version, that is a finding — an issue
 with a repro beats an issue with an opinion.
