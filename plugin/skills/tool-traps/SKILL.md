@@ -45,7 +45,7 @@ failed glob aborts the whole file — measured, the next line never ran and the
 script exited 1. In the source corpus this combination let an `rm` behind a
 dead glob silently not run, and a stray test file got committed.
 
-**Guard:** use arrays (`for f in ${(f)$(...)}` or `while read`), quote
+**Guard:** use arrays (`for f in ${(f)"$(...)"}` or `while read`), quote
 everything, and never hang a destructive or measuring command behind a glob in
 the same line.
 
