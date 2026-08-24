@@ -80,23 +80,23 @@ evidence it earned its place:
    sessions) instead of blocked questions.
 6. **Non-goals with reasons.** Not "out of scope" — *considered and
    rejected, with the reason*, so successors do not repeat the analysis.
-   Plus a parking lot ("Parked, not commissioned") that keeps good ideas
-   from being silently built or silently lost.
+   Plus a parking lot, labelled "Parked, not commissioned" in the template
+   here, that keeps good ideas from being silently built or silently lost.
 7. **Trap catalog.** Only traps actually hit, with mechanisms. Two corpus
    findings temper it: a warned trap was still hit twice (warnings shorten
    diagnosis; they do not prevent the misstep), and emphasis inflates — see
    "What turned out to be ritual".
 8. **Context budget as a construction parameter.** The rule that ended
-   overflows in the corpus has four clauses: one session introduces at most
+   overflows in the corpus: one session introduces at most
    one new mechanism and a bounded volume of new content; the seam for a
    planned cut is named *before* starting; consumption is measured, not
    felt; and at half the window you cut, so that the first half ships
    complete and green and the second half gets its own full brief. "A
    planned cut is a clean delivery. Running over is not."
-9. **Gate with exact numbers.** Done-criteria as exact expected values,
-   not directions, and every guard built in the session needs its
-   counter-test (make it fail once on purpose). A guard without a
-   counter-test is a claim.
+9. **Gate with exact numbers.** Done-criteria as exact expected values, not
+   directions. Every guard built in the session needs its counter-test
+   (make it fail once on purpose). A guard without a counter-test is a
+   claim.
 10. **Completion protocol.** The result report mirrors the baseline table
     re-measured, and lists autonomous decisions, corrected inherited
     numbers, new traps with mechanisms, and what argues against the result.
@@ -115,8 +115,8 @@ the same chain, same kind of work:
   places despite a green gate, a review gate passed in full, and 86 probes.
 - **Session B**, briefed after the failure, carried the budget rule, a named
   seam, and a cut criterion. It measured the real surface (nine times larger
-  than assumed), cut at the named seam "deliberately, not by running
-  aground", shipped half A complete and green, and wrote the brief for
+  than assumed), cut at the named seam ("deliberately, not by running
+  aground"), shipped half A complete and green, and wrote the brief for
   half B itself. Its numbers: one new mechanism, 568 lines of new content
   against the ~500 guideline.
 
@@ -131,7 +131,7 @@ Measured on the same corpus — the pattern's own dead weight:
 - **A closing incantation** ("use ultrathink") appears in 40 of 85 briefs.
   No result report ever attributes any effect to it. It propagates as a
   formula because each brief copies the last one's shape.
-- **Effort labels without mechanics** ("Effort: L") control nothing. The
+- **Effort labels without mechanics** ("Effort: L") change nothing. The
   session that overran its window carried one. Labels became useful only
   when replaced by the budget rule above.
 - **Warning-marker inflation.** Warning glyphs per brief rose from 0–1
@@ -154,7 +154,8 @@ hypothetical. Condensed; populations in
 2. **Hand-counted values.** Wrong even inside the report about wrong
    numbers (8/4/15 → re-measured 10/9/12). Numbers come from commands.
 3. **Empty coverage promises.** A check that scans nothing looks exactly
-   like a check that passes ("a promise about nothing" for 19 sessions). Promises need to be measured against the file system.
+   like a check that passes ("a promise about nothing" for 19 sessions).
+   Promises need to be measured against the file system.
 4. **Silent tool failures.** Zero-hit regex dialects, swallowed exit codes,
    empty extractions, reporter fields contradicting exit codes — the whole
    [trap catalog](../plugin/skills/tool-traps/SKILL.md).
@@ -167,8 +168,8 @@ hypothetical. Condensed; populations in
    finding, and still only shifts the ambiguity, documented as such.
 7. **Offered artifacts go unused.** Enforced checks were effective 2 of 2
    times; merely available artifacts were used 0–1 of 2. An instruction
-   works when it reaches the one executing it: wire it into CI or name it
-   in the brief.
+   works when it reaches whoever has to carry it out: wire it into CI or
+   name it in the brief.
 8. **Measuring under concurrent load.** Two measurements of the same value
    in the same minute differed (a parallel run was mutating the tree).
    Measurements need a quiet, pinned state.
@@ -205,8 +206,8 @@ differ ([Effective harnesses for long-running agents](https://www.anthropic.com/
 **What the literature does not cover — and this pattern does.** Measuring
 the *evaluator's* miss rate (escape rate) instead of tuning it
 anecdotally; machinery against stale numbers in living documents; an
-evidence duty for numbers in prose, where their evidence gate covers
-pass-flags rather than claims; non-goals with reasons as a first-class
+evidence duty for numbers in prose — their evidence gate covers pass-flags,
+not claims; non-goals with reasons as a first-class
 section; context budget with a *named seam* decided before the session
 rather than reactive compaction; and publishing the measurement of one's
 own method even where it is unflattering.

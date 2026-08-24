@@ -71,9 +71,10 @@ in `./.agents/`; `-g` installiert stattdessen global. Die Fallen
 sind die Katalog-Gruppe „Claude Code harness" und an diesen Harness
 gebunden; alles andere darin ist werkzeugnah und agent-agnostisch.
 
-Für den Plugin-Weg: `/plugin` listet `tool-traps` als installiert. Danach
-die Spaßprobe, für jeden Weg: die Session bitten, ein `git grep` mit `\s`
-zu schreiben — sie sollte ablehnen und zu `[[:space:]]` greifen.
+Deterministische Prüfung, für den Plugin-Weg: `/plugin` listet `tool-traps`
+als installiert. Danach die Spaßprobe, die für jeden Weg gilt: die Session
+bitten, ein `git grep` mit `\s` zu schreiben — sie sollte ablehnen und zu
+`[[:space:]]` greifen.
 
 <!-- section: proof -->
 ## Was wir belegen können — und was nicht
@@ -206,8 +207,8 @@ die eigene Methode auf sich selbst an, in CI, bei jedem Push:
   geprüft noch erklärt ist. Seine Ausgabe ist diese Liste, deshalb führt
   diese README keine zweite Kopie davon — und reproduziert eine Falle einmal
   nicht mehr, wird der Guard absichtlich rot. Das ist der Katalog, der um
-  Nachprüfung bittet, kein kaputter Build; zwei eigene Einträge hat er auf
-  diesem Weg bereits widerlegt, [mit den
+  Nachprüfung bittet, kein kaputter Build. Zwei Katalogeinträge haben ihre
+  eigenen Proben bereits widerlegt, [mit den
   Messwerten](docs/what-the-numbers-say.md) (englisch).
 
 Alle drei<!-- count:guards --> Guards fahren zuerst ihre **Gegenprobe**

@@ -28,7 +28,7 @@
 ---
 status: "open"
 created: "[YYYY-MM-DD]"
-chain: "[chain-name, e.g. MIGRATE]"
+chain: "[chain-name, e.g., MIGRATE]"
 this: "[chain-name]-[n]"
 predecessor-result: "[path to previous session's result report, or 'none - first brief']"
 successor: "[to be written by this session at the end of its run]"
@@ -60,7 +60,7 @@ prevents the most expensive kind of scope drift - the well-intentioned kind.]
 
 ## The one sentence
 
-> [The single invariant that everything hangs on, e.g. "The report iterates
+> [The single invariant that everything hangs on, e.g., "The report iterates
 > the catalog, not the results."]
 
 **Its test:** [one operational check that tells you the invariant holds,
@@ -145,7 +145,7 @@ A planned cut is a clean delivery. Running over is not.
 
 ## Gate
 
-Done means all of the following, verifiably:
+Done means, verifiably, all of the following:
 
 1. [criterion with exact expected value, not a direction - "exactly 0", not
    "fewer"]

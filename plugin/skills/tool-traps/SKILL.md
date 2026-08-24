@@ -13,13 +13,13 @@ Three rules for using this catalog:
    a trap without a date is the next stale claim. If your version behaves
    differently, the catalog is wrong for you: re-verify, then rely on it. In
    the source repository, CI re-runs at each push every trap it can put a
-   probe behind, the trap form first and then the remedy against it, and
-   names the rest with number and reason. Its output, not this date, tells
+   probe behind, the trap form first and then the remedy the entry
+   prescribes, and names the rest with number and reason. Its output, not this date, tells
    you which of these entries were measured most recently and on what.
 3. **Being warned is not enough.** In the source corpus, two traps were hit
-   *while the warning sat verbatim in the session's own brief*. The guard
-   column exists because knowledge does not survive contact with autopilot;
-   mechanical checks do.
+   *while the session's own brief carried the warning word for word*. The
+   guard column exists because knowledge does not survive contact with
+   autopilot; mechanical checks do.
 
 Environment for the "verified locally" stamps below: macOS 26.0.1, git 2.50.1,
 zsh 5.9 (arm64), bash 3.2.57, node 24.3.0, Claude Code 2.1.238 — 2026-08-21.
@@ -41,8 +41,8 @@ and a glob with zero matches is a hard error, not an empty list.
 **Verified locally 2026-08-21** (zsh 5.9): `for f in $VAR` → one item `[a b c]`
 where bash yields three; `echo before; echo *.nomatch; echo after` → `after`
 never prints. In a non-interactive zsh *script* it is worse, not gentler:
-the failed glob aborts the whole file. Measured, the next line never ran and
-the script exited 1. In the source corpus this combination let an `rm`
+the failed glob aborts the whole file: in the measurement the next line
+never ran and the script exited 1. In the source corpus this combination let an `rm`
 behind a dead glob silently fail to run, and a stray test file got
 committed.
 
@@ -77,8 +77,8 @@ second.
 
 ## 3) `2>/dev/null` on a measurement swallows the fact that it failed
 
-**Symptom:** a search "returns zero hits", when what it actually returned
-is a usage error you threw away. Cousin: `head`/`tail` on a measurement
+**Symptom:** a search "returns zero hits"; what it actually returned was a
+usage error you threw away. Cousin: `head`/`tail` on a measurement
 silently truncates reality.
 
 **Mechanism:** discarded stderr converts "the command was wrong" into "the
@@ -108,7 +108,7 @@ checks it against a floor. Zero bytes is a verdict, not a result.
 
 ## git
 
-## 5) `git grep -E` is the platform's ERE, not POSIX — `\d` matches nothing, `\s` and `\b` change with the host
+## 5) `git grep -E` is the platform's ERE, not just POSIX — `\d` matches nothing, `\s` and `\b` change with the host
 
 **Symptom:** a perfectly reasonable-looking `git grep -E 'foo\s*\('` finds
 zero hits in a repo full of them, and a check built on it stays green
@@ -126,7 +126,8 @@ check reports "command failed" instead of a count.
 **Verified locally 2026-08-21** (macOS, git 2.50.1): `git grep -E
 'hello\sworld'` → 0 hits, exit 1; `[[:space:]]` → hit. In the source corpus
 a new guard searched call sites with `\b…\s*\(` and reported *every* module
-clean, while the warning about exactly this sat in the session's brief.
+clean, while the brief for that session carried the warning about exactly
+this.
 
 **Re-measured in CI 2026-08-24** (ubuntu-latest, Linux 6.17, git 2.55.0,
 glibc), over the same fixture: `\s` → 1 hit, exit 0, and `\b` → 1 hit, exit
@@ -217,7 +218,7 @@ alert on disagreement: that disagreement is the trap firing.
 ## 10) GitHub Actions `paths:` filters run per push, not per commit
 
 **Symptom:** you compute "which commits should have triggered CI" from
-`git log --name-only` and get a number wildly off from reality; a docs-only
+`git log --name-only` and get a number wildly at odds with reality; a docs-only
 push gets no run at all even though code commits earlier that day did.
 
 **Mechanism:** the filter is evaluated against the union of files changed in
@@ -227,7 +228,7 @@ end-of-session docs push is exactly that.
 **Measured in the source corpus** (2026-08, over 11 days, `gh run list`
 against 157 pushes): computing runs from per-commit paths was off by a
 factor of ~20; 98 of 157 pushes (62%) triggered no run under a filtered
-workflow, ten of them the session-closing docs pushes.
+workflow, 10 of them the session-closing docs pushes.
 
 **Guard:** for gate workflows: no `paths:` filter (always run, and keep the
 jobs cheap). Measure what actually ran with `gh run list`, never with
@@ -254,7 +255,7 @@ no `description` to match against" — alive under manual test, dead in the
 mode that matters.
 
 **Verified locally 2026-08-21** (Psych/YAML): hard SyntaxError. Measured in
-the source corpus on two agent definitions (js-yaml), where both would have
+the source corpus on two agent definitions (js-yaml); both would have
 silently failed to load. This file's own frontmatter quotes its description
 for exactly this reason.
 
@@ -282,8 +283,8 @@ version of this trap over-generalized to "all new definitions need a new
 session", and was narrowed after review.)
 
 **Guard:** create the agents directory once, before you need it; after
-writing a scope's first agent file into a new directory, restart. Have the
-next brief name the new agents explicitly, because in the measured corpus
+writing a scope's first agent file into a new directory, restart. And have
+the next brief name the new agents explicitly — in the measured corpus,
 offered-but-unnamed artifacts were used 0 out of 2 times.
 
 ## 13) Auto-memory is silently truncated — 200 lines, then 25,000 characters
@@ -293,11 +294,11 @@ context; nothing announces the cut.
 
 **Mechanism:** at load, MEMORY.md is truncated to 200 lines first, then to
 25,000 *characters* (UTF-16 units) at the last line boundary. The excess is
-dropped silently. A warning fires at 80% of either limit, if something
-surfaces it. Note the unit collision: the official docs state the cap as
-"the first 25KB", and the tool's internal name for the limit says bytes,
-but measured it is 25,000 UTF-16 code units, which for any non-ASCII
-content is not the same thing.
+dropped silently. A warning fires at 80% of either limit — assuming
+something surfaces it. Note the unit collision: the official docs state the
+cap as "the first 25KB", and the tool's internal name for the limit says
+bytes; the measured limit is 25,000 UTF-16 code units, which for any
+non-ASCII content is not the same thing.
 
 **Measured in the source corpus** (extracted from the Claude Code binary
 v2.1.237 and observed in operation: an index at 88.5% of quota was already
@@ -319,29 +320,33 @@ of the same command line.
 that is sitting right there. Everything a `.gitignore` covers is invisible
 to it, and so is everything under `.git/`. A search meant to prove "this
 string appears nowhere" proves it only for the part of the tree the
-wrapper decided to walk, and it says so with exit 1, the same way it would
-report a genuinely empty tree.
+wrapper decided to walk. It reports that partial absence with exit 1, the
+same exit it gives when the string genuinely appears nowhere.
 
 **Mechanism:** both names resolve to shell functions from the session's
 shell snapshot rather than to the system tools; they run the search engines
 embedded in the Claude Code binary (`ARGV0=ugrep claude -G …`,
 `ARGV0=rg claude …`). `type grep` prints the function body; `which ugrep`
-finds no binary at all. The function does not pass your arguments through
-untouched: it prepends `--ignore-files --hidden -I --exclude-dir=.git`
-plus one exclusion per further VCS directory. `--ignore-files` applies
-every `.gitignore` it finds, with no git repository required for it to
-take effect, and `--exclude-dir=.git` drops the repository's own files.
-Only `--hidden` runs the other way, putting dotfiles back in, which is
-where the system `grep -r` has them anyway. Nothing in those flags governs
-order; `-J1` (one worker) makes the order stable, from which the engines
-evidently walk several files at once and print each file's block once that
-file is finished.
+finds no binary at all. The two functions are not alike. The `grep` one
+prepends flags of its own in front of your arguments: `--ignore-files
+--hidden -I --exclude-dir=.git`, plus one exclusion per further VCS
+directory. `--ignore-files` applies every `.gitignore` it finds, with no
+git repository required for it to take effect, and `--exclude-dir=.git`
+drops the repository's own files; only `--hidden` runs the other way,
+putting dotfiles back in, which is where the system `grep -r` has them
+anyway. The `rg` function forwards your arguments unchanged, and is
+defined at all only on a host with no ripgrep of its own, though ripgrep's
+defaults skip ignored and hidden files in any case. Symptom (b) below was
+measured on `grep`. Nothing here governs order; `-J1` (one worker) makes
+the order stable, which is the evidence that the engines walk several
+files at once and print each file's block once that file is finished: the
+order follows completion, not the command line.
 
 **Verified locally 2026-08-24** (Claude Code 2.1.241, zsh 5.9, macOS
-26.0.1), symptom (a): ten identical runs of `grep -o 'section: [a-z-]*'
+26.0.1), symptom (a): 10 identical runs of `grep -o 'section: [a-z-]*'
 README.md README.de.md` printed the *second* file's block first in 4 of
-10; the same ten runs under `rg`, in 5 of 10. Blocks stayed contiguous in
-all twenty runs; only their order moved. Ten runs each of
+10; the same 10 runs under `rg`, in 5 of 10. Blocks stayed contiguous in
+all 20 runs; only their order moved. 10 runs each of
 `command -p grep`, `grep -J1` and `rg --sort path` held argument order 10
 of 10, re-checked with the arguments swapped, though for this pair
 argument order is not path order, so what `--sort path` bought was
@@ -350,7 +355,8 @@ check of this repository's own session brief, where that same command line
 sits in the starting-state table.
 
 **Verified locally 2026-08-24** (same environment), symptom (b): a
-throwaway directory that is no git repository at all, a `.gitignore`
+throwaway directory that is not a git repository at all (it holds a
+`.git/` with one file in it, but nothing git will open), a `.gitignore`
 naming `ignored`, and one planted line in four files. `command -p grep -r`
 found all four; the wrapper found two, missing `ignored/a.txt` and
 `.git/config`, and both exited 0. With the line planted *only* in the

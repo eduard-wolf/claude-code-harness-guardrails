@@ -101,8 +101,8 @@ All hit during the spike for this migration (illustrative here; your spike
 will produce your list):
 
 1. **`.eslintignore` is silently ignored under flat config.** The lint run
-   then covers MORE files than before, and "new errors" appear that are
-   really just newly covered old files. Guard: compare linted-file counts
+   then covers MORE files than before, and "new errors" appear that come
+   from files the old config never linted. Guard: compare linted-file counts
    first, before reading a single finding.
 2. **`env: { node: true }` does not exist in flat config.** Without
    `languageOptions.globals`, `process` and friends become `no-undef`
@@ -130,7 +130,7 @@ the tool-traps skill; install it instead of restating it here.)
   legacy files removed. Half B — replace each FlatCompat bridge with the
   plugin's native flat config, plugin upgrades where required.
 - **The trigger:** more than half the context window spent when half A is
-  green: cut.
+  green — cut.
 - **What half A must be when you cut:** linting green in CI, parity diff
   committed, result report written.
 - **What happens to half B:** its own brief, LINT9-1b, written by you,

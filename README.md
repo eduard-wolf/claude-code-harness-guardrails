@@ -63,15 +63,16 @@ npx skills add eduard-wolf/claude-code-harness-guardrails
 That writes the catalog once to `.agents/skills/tool-traps/` and links it
 into the per-agent directories the CLI supports, Claude Code among them
 (verified 2026-08-24, skills CLI 1.5.23). It installs into the directory
-you run it in: measured the same day in one with neither `.git` nor
-`package.json`, it still landed in `./.agents/`. Use `-g` to install
-globally instead. Traps 11 to 14<!-- trap-group: Claude Code harness = 11-14 -->
+you run it in — measured the same day in a directory with neither `.git`
+nor `package.json`, where it still landed in `./.agents/`. Use `-g` to
+install globally instead. Traps 11 to 14<!-- trap-group: Claude Code harness = 11-14 -->
 are the catalog's own "Claude Code harness" group and bound to this
 harness; everything else in it is tool-level and agent-agnostic.
 
-For the plugin route: `/plugin` lists `tool-traps` as installed. Then the
-fun probe, for any route: ask the session to write a `git grep` with `\s`.
-It should refuse and reach for `[[:space:]]`.
+Deterministic check, for the plugin route: `/plugin` lists `tool-traps` as
+installed. Then the fun probe, which works for any route: ask the session
+to write a `git grep` with `\s`. It should refuse and reach for
+`[[:space:]]`.
 
 <!-- section: proof -->
 ## What we can prove — and what we can't
@@ -118,12 +119,12 @@ date, and the guard against it. No brainstormed risks. Three samples:
   start, because the file watcher covers only directories that existed at
   session start. The file is written, the agent is not found. (Trap 12)<!-- trap-ref: 12 agents -->
 - Auto-memory (`MEMORY.md`) is silently truncated at 200 lines / 25,000
-  characters. Measured, including the fact that the tool's internal name
-  for the limit says "bytes" and means characters. (Trap 13)<!-- trap-ref: 13 memory -->
+  characters. That is measured, down to the fact that the tool's internal
+  name for the limit says "bytes" and means characters. (Trap 13)<!-- trap-ref: 13 memory -->
 
 Knowing them is not the same as being safe from them: in the source
-corpus, two of the catalog's traps were hit *while the warning sat
-verbatim in the session's own brief*. Knowledge does not survive contact
+corpus, two of the catalog's traps were hit *while the session's own brief
+carried the warning word for word*. Knowledge does not survive contact
 with autopilot; mechanical checks do, which is why every entry here ends
 in a guard, not in a reminder.
 
@@ -185,7 +186,7 @@ method to itself, in CI, on every push:
 - **[guards/verify-traps.mjs](guards/verify-traps.mjs)** — the dates on the
   trap catalog stop being a promise. On every push the runner re-runs every
   trap this guard can put a probe behind: first the form that springs the
-  trap, then the remedy the entry names against it. The entry counts as
+  trap, then the remedy the entry prescribes. The entry counts as
   verified only when the trap springs *and* the remedy stops it, because a
   probe that cannot tell those two apart has measured neither. What it does
   not probe is not quietly dropped. Traps that live inside the Claude Code
@@ -196,9 +197,9 @@ method to itself, in CI, on every push:
   refuses to go green while any catalog entry is neither probed nor
   explained. Its output is that list, so this README does not keep a second
   copy of it. If a trap ever stops reproducing, the guard goes red on
-  purpose. That is the catalog asking to be re-verified, not a broken build;
-  it has already falsified two of its own entries that way, [with the
-  measurements](docs/what-the-numbers-say.md).
+  purpose. That is the catalog asking to be re-verified, not a broken
+  build. Two catalog entries have already been falsified by their own
+  probes, [with the measurements](docs/what-the-numbers-say.md).
 
 All three<!-- count:guards --> guards run their **counter-test first**
 (`--self-test`): each proves it *can* go red before its green is accepted. A

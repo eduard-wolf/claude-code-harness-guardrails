@@ -44,7 +44,7 @@ Three honest limits, stated in the source itself and sharpened here:
   improved, the measurement cannot attribute it to the optimization.
 - **The metric itself is under-documented.** "Context drift" was measured in
   the session that ran the comparison; the pre-series and the metric's exact
-  definition were never recorded anywhere lasting. By this repository's own
+  definition were never written down. By this repository's own
   standard, the headline number does not fully meet the evidence bar. That,
   too, is a finding, and the reason the chain now writes measurements down
   before citing them.
@@ -83,10 +83,12 @@ before-push; n = 3 — no trend yet, but counted from now on).
   Cause: `paths:` filters plus the fact that end-of-session docs pushes
   match no code path. Fix: a gate workflow with no path filter.
 - **A 25.0% cut of the context file did not stay cut.** 181,534 → 136,245
-  characters. But 121 of 340 content units (44.6% of the file) were mixed
-  units, history and live rules interleaved and not mechanically separable,
-  and the file regrows by ~6,200 characters per session. The source's own
-  verdict: the cut "bought time, built no mechanism."
+  characters. But 121 of its 340 content units were mixed: history and live
+  rules interleaved, not mechanically separable. The source reports the
+  mixed share as 44.6% of the file, which is not 121 of 340; it does not say
+  what that percentage is a share of. The file regrows by ~6,200 characters
+  per session. The source's own verdict: the cut "bought time, built no
+  mechanism."
 - **Of 69 coverage promises in 9 guard files, 3 were empty and 2 narrowed.**
   One guard surface had been "a promise about nothing" for 19 sessions: its
   extension filter matched zero files in the directory it claimed to scan.
@@ -100,19 +102,19 @@ before-push; n = 3 — no trend yet, but counted from now on).
   a claim, even in the report about claims.")
 - **Escape rate, defined and started.** Defects a session's author and its
   review gate both missed, found later by CI, a successor, a production
-  smoke test, or the owner, normalized per 1,000 changed lines. First data
+  smoke test, or the owner. Normalized per 1,000 changed lines. First data
   points: 1.49 and 1.02 escaped/1,000 for two earlier sessions, 0 (so far)
   for the session that built the metric. Stated limits: every value is a
-  lower bound; a rising rate can mean sloppier work *or* more thorough
-  successors, and the metric separates self-report from external finding
-  without resolving that ambiguity; values compare within the corpus and
+  lower bound, and a rising rate can mean sloppier work *or* more thorough
+  successors. The metric separates self-report from external finding; it
+  does not resolve that ambiguity. Values compare within the corpus and
   mean nothing as absolutes.
 - **Enforced artifacts get used; offered ones don't.** In the two sessions
   measured: checks wired into CI or imports were effective 2 of 2 times;
   artifacts that were merely available (subagent definitions, a progress
   directory) were used 0 of 2 and 1 of 2 times. The corpus's later
-  refinement: an instruction works when it *reaches the one executing it*,
-  and nothing had named the offered artifacts.
+  refinement: an instruction works when it *reaches whoever has to carry it
+  out*, and nothing had named the offered artifacts.
 
 ## Drift found while building this repository
 
@@ -152,24 +154,25 @@ it:
 
 - **Trap 5 was true where it had been measured and false one runner away.**
   Found by the guard's first run against a host it was not written on. The
-  entry said `\s`, `\b` and `\d` all "silently match nothing", under a
-  macOS stamp. Over the same fixture: macOS with git 2.50.1 gives 0 hits and
+  entry said `\s`, `\b` and `\d` all "silently match nothing" under a macOS
+  stamp. Over the same fixture: macOS with git 2.50.1 gives 0 hits and
   exit 1 for all three; ubuntu-latest with git 2.55.0 and glibc gives `\s` 1
   hit at exit 0, `\b` 1 hit at exit 0, and `\d` 0 hits at exit 1. The entry
   had understated its own trap: the check does not fail everywhere; it
   changes its verdict with the machine. Corrected in `2ac3400`.
-- **Trap 1 printed the trap form inside its own guard sentence.** The remedy
-  the entry named was `for f in ${(f)$(...)}`. On zsh 5.9 that yields one
-  element with the newlines collapsed into spaces, where `${(f)"$(...)"}`
+- **Trap 1's guard sentence contained the very form it warns against.** The
+  remedy the entry named was `for f in ${(f)$(...)}`. On zsh 5.9 that yields
+  one element with the newlines collapsed into spaces, while `${(f)"$(...)"}`
   yields three. The rule the sentence stated was right; the example beside
   it was the trap. This probe needs zsh, which the Linux runner does not
-  have, so the finding came from a local run. Corrected in `220828b`. That
-  makes two entries in this catalog whose guard rebuilt what the entry
-  teaches: the first was caught by a reviewer reading, this one by a probe
-  running.
+  have, so the finding came from a local run. Corrected in `220828b`. Two
+  entries in this catalog have now printed, in their own guard sentence, the
+  trap that entry teaches: the `${PIPESTATUS[0]}` example, caught by a
+  reviewer reading, and this one, caught by a probe running.
 
-Neither was found by reading. Both were found by machinery that re-runs the
-claims, one of them on a host the author does not control.
+Neither of the two falsifications above was found by reading. Both came from
+machinery that re-runs the claims, one of them on a host the author does not
+control.
 
 ## Provenance
 
