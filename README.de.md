@@ -180,13 +180,13 @@ die eigene Methode auf sich selbst an, in CI, bei jedem Push:
   README für den Guard *markierte* Anzahl (wie die Fallen-Zahl oben) wird
   gegen das Artefakt selbst nachgemessen. Kein zweites Register: Der
   Katalog ist die einzige Quelle seiner eigenen Anzahl. Derselbe Guard
-  misst auch die *markierten* Fallen-Verweise nach — ein „(Falle 11)" in
-  der Prosa muss weiterhin auf den Eintrag zeigen, den es nennt, sodass
-  eine Umnummerierung des Katalogs diese README rot färbt, statt sie still
-  falsch zitieren zu lassen — und er hält eine unmarkierte Invariante: so
-  viele `**Guard:**`-Zeilen im Katalog wie Einträge. Erst das macht „jeder
-  Eintrag endet mit einem Guard" zu einer Messung statt zu einem
-  Versprechen. Die Korpus-Zahlen (85 Briefings, 262 Dateien, Zeilenzahlen)
+  misst jeden Fallen-Verweis dieser README nach — ein
+  „(Falle 11)<!-- trap-ref: 11 YAML -->" muss weiterhin auf den Eintrag
+  zeigen, den es nennt, und ein unmarkierter Verweis ist ebenfalls rot, so
+  dass eine Umnummerierung die Prosa nicht still falsch stehen lassen kann.
+  Dazu hält er eine unmarkierte Invariante: so viele `**Guard:**`-Zeilen im
+  Katalog wie Einträge. Erst das macht „jeder Eintrag endet mit einem
+  Guard" zu einer Messung statt zu einem Versprechen. Die Korpus-Zahlen (85 Briefings, 262 Dateien, Zeilenzahlen)
   sind historische Messungen mit Datum und ohne Maschine — bewusst
   unmarkiert, weil keine Datei dieses Repositories sie nachmessen kann.
 

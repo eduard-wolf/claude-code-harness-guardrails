@@ -22,7 +22,10 @@
 //                   reference silently. It happened here: entry 14 was
 //                   inserted into the middle of the catalog, and three
 //                   references in each README pointed at their old neighbours
-//                   until this check said so.
+//                   until this check said so. And because a guard that only
+//                   checks what someone remembered to mark is a habit rather
+//                   than a guard, every `(Trap N)` / `(Falle N)` in prose must
+//                   carry such a marker in the first place.
 //
 //   which entries   `Traps 11 to 14<!-- trap-group: Claude Code harness = 11-14 -->`
 //   form a group    Exactly entries 11..14 must sit between that group heading
@@ -60,6 +63,8 @@ const REGISTERS = {
 
 const COUNT = /([A-Za-zÄÖÜäöüß]+|\d+)(?:\*\*)?<!--\s*count:([a-z0-9-]+)\s*-->/g;
 const TRAP_REF = /<!--\s*trap-ref:\s*(\d+)\s+([^\s>]+?)\s*-->/g;
+// Every prose reference to a catalog number, marked or not.
+const REFERENCE = /\((?:Trap|Falle)\s+(\d+)\)(\s*<!--\s*trap-ref:)?/g;
 const TRAP_GROUP = /<!--\s*trap-group:\s*(.+?)\s*=\s*(\d+)\s*-\s*(\d+)\s*-->/g;
 
 // Prose writes small numbers as words; forcing digits would make the guard's
@@ -132,6 +137,12 @@ function check(src) {
       if (!entry.title.toLowerCase().includes(word.toLowerCase())) {
         errors.push(`${file}: trap-ref ${n} expects "${word}" in the heading, entry ${n} reads "${entry.title}"`);
       }
+    }
+
+    // A marker only guards the reference it sits behind. An unmarked one is
+    // the same drift, unobserved.
+    for (const m of text.matchAll(REFERENCE)) {
+      if (!m[2]) errors.push(`${file}: "${m[0]}" carries no <!-- trap-ref: ${m[1]} <word> --> marker — the reference is unguarded`);
     }
 
     for (const m of text.matchAll(TRAP_GROUP)) {
@@ -211,6 +222,10 @@ const COUNTER_TESTS = [
       (_, head, from, dash, to) => head + (Number(from) + 1) + dash + (Number(to) + 1)),
   },
   {
+    name: 'a catalog reference left without its marker',
+    mutate: src => inFirstProse(src, /\s*<!--\s*trap-ref:[^>]*-->/, () => ''),
+  },
+  {
     name: 'a register left unstated in every prose file',
     mutate: src => {
       const out = copyOf(src);
@@ -225,6 +240,10 @@ const COUNTER_TESTS = [
 ];
 
 if (process.argv.includes('--self-test')) {
+  // Each counter-test must raise an error the untouched tree does not already
+  // have. Accepting "some error appeared" would let one unrelated red check
+  // pass every counter-test at once — measured here: it did.
+  const baseline = check(sources).errors;
   let passed = 0;
   for (const [i, test] of COUNTER_TESTS.entries()) {
     const label = `${i + 1}/${COUNTER_TESTS.length} "${test.name}"`;
@@ -234,16 +253,16 @@ if (process.argv.includes('--self-test')) {
       console.error('The check it belongs to is unreachable. Fix the guard before trusting it.');
       process.exit(1);
     }
-    const res = check(falsified);
-    if (res.errors.length === 0) {
-      console.error(`SELF-TEST FAILED: counter-test ${label} falsified a claim and the guard stayed green.`);
+    const raised = check(falsified).errors.filter(e => !baseline.includes(e));
+    if (raised.length === 0) {
+      console.error(`SELF-TEST FAILED: counter-test ${label} falsified a claim and raised no new error.`);
       console.error('The guard proves nothing. Fix the guard before trusting it.');
       process.exit(1);
     }
     passed++;
-    console.log(`self-test ${label}: red as required — ${res.errors[0]}`);
+    console.log(`self-test ${label}: red as required — ${raised[0]}`);
   }
-  console.log(`self-test: OK — ${passed} of ${COUNTER_TESTS.length} counter-tests turned the guard red`);
+  console.log(`self-test: OK — ${passed} of ${COUNTER_TESTS.length} counter-tests raised an error of their own`);
 }
 
 const { errors, measured, seen, catalog } = check(sources);

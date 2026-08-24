@@ -171,13 +171,13 @@ method to itself, in CI, on every push:
 - **[guards/check-counts.mjs](guards/check-counts.mjs)** — every count
   *marked* for the guard in this README (like the trap count above) is
   re-measured against the artifact itself. No second register: the catalog
-  is the only source of its own count. The same guard re-measures the
-  *marked* trap references — a "(Trap 11)" in prose has to still point at
-  the entry it names, so renumbering the catalog turns this README red
-  instead of leaving it quietly wrong — and it holds one unmarked
-  invariant: as many `**Guard:**` lines in the catalog as entries, which is
-  what makes "every entry here ends in a guard" a measurement rather than a
-  promise. The corpus figures (85 briefs, 262 files, line counts) are
+  is the only source of its own count. The same guard re-measures every
+  trap reference in this README — a "(Trap 11)<!-- trap-ref: 11 YAML -->"
+  has to still point at the entry it names, and a reference left unmarked
+  is red as well, so renumbering the catalog cannot leave the prose quietly
+  wrong. It holds one unmarked invariant on top: as many `**Guard:**` lines
+  in the catalog as entries, which is what makes "every entry here ends in
+  a guard" a measurement rather than a promise. The corpus figures (85 briefs, 262 files, line counts) are
   historical measurements with a date and no machine — deliberately
   unmarked, because no file in this repository can re-measure them.
 
