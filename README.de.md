@@ -29,8 +29,10 @@ false | cat; echo "EXIT=$?"   # druckt 1 - und meldet dem Harness Exit 0
 ```
 
 Es ist kein Framework, kein schlüsselfertiger Harness und kein Versprechen,
-dass alles besser wird. Es ergänzt Anthropics veröffentlichte
-Harness-Patterns; es ersetzt sie nicht.
+dass alles besser wird. Es ist auch keine Permission-Firewall: Es richtet
+sich gegen stilles Falschsein — Zahlen, die lautlos veralten, Prüfungen,
+die lautlos nichts prüfen —, nicht gegen gefährliche Kommandos. Es ergänzt
+Anthropics veröffentlichte Harness-Patterns; es ersetzt sie nicht.
 
 <!-- section: quickstart -->
 ## Fünf Minuten

@@ -28,8 +28,10 @@ false | cat; echo "EXIT=$?"   # prints 1 - and reports exit 0 to your harness
 ```
 
 It is not a framework, not a turnkey harness, and not a promise that
-everything gets better. It composes with Anthropic's published harness
-patterns; it does not replace them.
+everything gets better. It is not a permission firewall either: what it
+guards against is being silently wrong — numbers that go stale unnoticed,
+checks that quietly test nothing — not dangerous commands. It composes
+with Anthropic's published harness patterns; it does not replace them.
 
 <!-- section: quickstart -->
 ## Five minutes
