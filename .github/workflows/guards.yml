@@ -30,5 +30,10 @@ jobs:
         run: node guards/check-readme-parity.mjs --self-test
       - name: Stated counts match measured counts
         run: node guards/check-counts.mjs --self-test
+      # --require names the tools this image is expected to carry. Without it a
+      # runner that quietly loses ruby just probes less and stays green: measured
+      # on a PATH without git, "OK — 5 of 15", exit 0. zsh is deliberately not on
+      # the list — this image has none, and that gap is printed rather than
+      # required away.
       - name: Trap catalog still reproduces (and names what it cannot)
-        run: node guards/verify-traps.mjs --self-test
+        run: node guards/verify-traps.mjs --self-test --require bash,git,perl,ruby

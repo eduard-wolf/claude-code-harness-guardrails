@@ -82,7 +82,7 @@
 // left out and why, because a counter-test count that quietly shrinks is the
 // same empty promise one level further out.
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -104,12 +104,19 @@ const BRANCHES = {
   'catalog-unreadable': 'the catalog this guard reads its register out of is not there',
   'duplicate-number': 'one entry number carried twice — in the catalog, or by two probes',
   'heading-drift': 'the entry behind a probed number is no longer about the same thing',
+  'heading-malformed': 'a heading that is nearly an entry heading, and so is counted as none',
+  'required-tool-missing': 'a tool this run was told the host must have is not here',
 };
 
 // ---------------------------------------------------------------- running things
 
 const lines = s => s.split(/\r?\n/);
 const firstLine = s => lines(s.trim())[0] || '';
+
+// One line per trap is a promise the output makes about its own shape, and any
+// detail that interpolates a tool's stdout can break it from the outside. Every
+// detail and every message passes through here first.
+const flat = s => String(s == null ? '' : s).replace(/\s*\r?\n\s*/g, ' ⏎ ').trim();
 
 // Run a command and return what happened. Never throws: a non-zero exit is the
 // subject of half these probes. Entry 5's second half is exactly this — `git
@@ -132,49 +139,98 @@ function run(file, args, opts = {}) {
   }
 }
 
+// A probe inherits the environment of whoever started it, and that environment
+// can decide what a shell does before the probe's first character runs.
+// Measured 2026-08-24, every one of them turning a probe *false-red* and
+// blaming the catalog for it: `BASH_ENV` pointing at a file that echoes (eight
+// errors); a `ZDOTDIR` whose `.zshenv` sets `shwordsplit nonomatch` ("trap 1 no
+// longer reproduces — re-verify and update the catalog"); `SHELLOPTS=pipefail`
+// (trap 2, same sentence); `SHELLOPTS=xtrace` (trap 3, both halves).
+//
+// False-red is not the harmless direction. This guard's red says "your catalog
+// is stale, go re-verify an entry"; when the truth is "your shell was
+// configured behind my back", it sends somebody to edit a correct entry. So
+// the shells start from a scrubbed environment.
+const SHELL_LEAKS = [
+  'BASH_ENV', 'ENV', 'SHELLOPTS', 'BASHOPTS', 'ZDOTDIR', 'CDPATH',
+  'IFS', 'PS4', 'BASH_XTRACEFD', 'POSIXLY_CORRECT',
+];
+
+// Computed per call rather than once at load, so the self-test can pollute
+// process.env, run every probe again, and demand the same verdicts.
+function shellEnv() {
+  const env = { ...process.env };
+  for (const key of SHELL_LEAKS) delete env[key];
+  return env;
+}
+
 // Shells are named explicitly, never `sh` and never `shell: true`: which shell
 // answers to `sh` is exactly the kind of host difference that would decide a
-// probe about shells.
-const sh = (shell, script, opts) => run(shell, ['-c', script], opts);
+// probe about shells. zsh reads `.zshenv` even for `zsh -c`; only `-f` skips it
+// (measured: with ZDOTDIR set, `zsh -c` picks the file up, `zsh -f -c` does
+// not). bash reads nothing non-interactively once BASH_ENV is gone.
+const shellArgs = (shell, script) => (shell === 'zsh' ? ['-f', '-c', script] : ['-c', script]);
+const sh = (shell, script, opts = {}) => run(shell, shellArgs(shell, script), { env: shellEnv(), ...opts });
 
-// Git must not read the machine it happens to run on: a global gitconfig with
-// commit signing, or a different locale, would otherwise decide these probes.
+// Git reads more of the environment than anything else here, and an enumerated
+// list of GIT_* variables to remove is precisely the name-pinned guard this
+// repository argues against: it is correct until the next git release adds a
+// variable, and then it is silently incomplete. Every GIT_* is removed, and the
+// few the probes need are put back.
 //
-// The deletions matter more than the overrides. Inheriting GIT_DIR or
-// GIT_INDEX_FILE would point every git probe at whatever repository the
-// ambient environment names — measured on a copy: with GIT_DIR exported, the
-// probes committed three times into a foreign repository, deleted a tracked
-// file from its index, and reported "trap verification: OK". A guard that
-// writes outside its own temp directory is not a guard, and one that stays
-// green while measuring the wrong repository is the header's failure class 3
-// with a shell attached.
-const GIT_ENV = { ...process.env };
-for (const key of [
-  'GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_OBJECT_DIRECTORY',
-  'GIT_ALTERNATE_OBJECT_DIRECTORIES', 'GIT_COMMON_DIR', 'GIT_NAMESPACE',
-  'GIT_CEILING_DIRECTORIES', 'GIT_PREFIX', 'GIT_INTERNAL_SUPER_PREFIX',
-]) delete GIT_ENV[key];
-Object.assign(GIT_ENV, {
-  GIT_CONFIG_GLOBAL: '/dev/null',
-  GIT_CONFIG_SYSTEM: '/dev/null',
-  GIT_TERMINAL_PROMPT: '0',
-  LC_ALL: 'C',
-  LANG: 'C',
-});
-const git = (dir, args) => run('git', args, { cwd: dir, env: GIT_ENV });
+// What that list missed while it was a list, all measured: `GIT_TRACE=1` (trap
+// 3's guard "does not hold", because the trace lands on the stderr the probe
+// reads); `GIT_CONFIG_COUNT`/`KEY_0`/`VALUE_0` and `GIT_CONFIG_PARAMETERS`
+// (any config at all, injected past GIT_CONFIG_GLOBAL). HOME and
+// XDG_CONFIG_HOME point inside the probe's own directory because the global
+// ignore file lives under both, and one `brand-new.txt` line in it made trap 6
+// report that its remedy no longer works.
+function gitEnv(dir) {
+  const env = shellEnv();
+  for (const key of Object.keys(env)) if (/^GIT_/.test(key)) delete env[key];
+  return {
+    ...env,
+    HOME: dir,
+    XDG_CONFIG_HOME: join(dir, 'xdg-empty'),
+    GIT_CONFIG_GLOBAL: '/dev/null',
+    GIT_CONFIG_SYSTEM: '/dev/null',
+    GIT_TERMINAL_PROMPT: '0',
+    LC_ALL: 'C',
+    LANG: 'C',
+  };
+}
+const git = (dir, args) => run('git', args, { cwd: dir, env: gitEnv(dir) });
 
 // CI runners carry no git identity; a commit without one fails, and the probe
 // would then report a trap that "no longer reproduces" for the wrong reason.
+// The excludes file and hooks path are pinned for the same reason one level
+// out: both are ways for the host to change what `git add` does.
 function initRepo(dir) {
   git(dir, ['init', '-q', '.']);
   git(dir, ['config', 'user.name', 'trap probe']);
   git(dir, ['config', 'user.email', 'probe@example.invalid']);
   git(dir, ['config', 'commit.gpgsign', 'false']);
+  git(dir, ['config', 'core.excludesFile', '/dev/null']);
+  git(dir, ['config', 'core.hooksPath', join(dir, 'no-hooks')]);
 }
 
+// The fixture is a measurement too, and it was the one measurement nothing
+// looked at. Measured: with commit signing forced on through
+// GIT_CONFIG_PARAMETERS and no key on the host, every commit here failed with
+// 128, no HEAD ever existed — and the guard reported "trap verification: OK —
+// 8 of 15". A probe standing on a fixture that was never built is a tautology
+// with an exit code. Anything that throws here becomes `probe-error`, which is
+// a verdict of "no verdict", not a pass.
 function commitAll(dir, message) {
-  git(dir, ['add', '-A']);
-  return git(dir, ['commit', '-q', '-m', message]);
+  const add = git(dir, ['add', '-A']);
+  if (add.status !== 0) throw new Error(`fixture: git add exited ${add.status} — ${flat(add.stderr) || 'no message'}`);
+  const commit = git(dir, ['commit', '-q', '-m', message]);
+  if (commit.status !== 0) throw new Error(`fixture: git commit exited ${commit.status} — ${flat(commit.stderr) || 'no message'}`);
+  const head = git(dir, ['rev-parse', 'HEAD']);
+  if (head.status !== 0) throw new Error(`fixture: no HEAD after committing (git rev-parse exited ${head.status})`);
+  const tracked = git(dir, ['ls-files']);
+  if (tracked.stdout.trim() === '') throw new Error('fixture: the commit tracked no files — an ignore rule or a hook swallowed it');
+  return tracked.stdout.trim();
 }
 
 const write = (dir, name, body) => writeFileSync(join(dir, name), body);
@@ -195,8 +251,8 @@ const PROBES = [
   {
     n: 1,
     title: 'zsh word-splitting, and the dead glob that kills the line',
-    heading: "zsh",
-    requires: ['zsh', 'bash'],
+    heading: 'zsh',
+    requires: ['zsh', 'bash', 'cat'],
     setup: dir => write(dir, 'items.txt', 'a\nb\nc\n'),
     trap: dir => {
       const inZsh = sh('zsh', 'VAR="a b c"; n=0; for f in $VAR; do n=$((n+1)); done; echo N=$n', { cwd: dir });
@@ -217,9 +273,15 @@ const PROBES = [
       return {
         ok: quoted.stdout.trim() === 'N=3' && read.stdout.trim() === 'N=3'
           && lines(safeGlob.stdout).includes('after') && safeGlob.status === 0,
+        // The verdict on the entry's own illustration is read off the number it
+        // produced, not written into the sentence: if somebody fixes the
+        // catalog, this line has to stop calling it a trap by itself.
         detail: '${(f)"$(...)"} → ' + quoted.stdout.trim() + ', while read → ' + read.stdout.trim()
           + ', quoted glob → "after" printed; the entry prints ${(f)$(...)} unquoted, which gives '
-          + asPrinted.stdout.trim() + ' — that is the trap, not the guard',
+          + (asPrinted.stdout.trim() || 'nothing')
+          + (asPrinted.stdout.trim() === quoted.stdout.trim()
+            ? ' — the same as the quoted form, so the entry\'s example is no longer wrong here'
+            : ' — that is the trap, not the guard'),
       };
     },
   },
@@ -227,8 +289,9 @@ const PROBES = [
   {
     n: 2,
     title: 'the exit code a harness sees is the last command\'s',
-    heading: "exit",
-    requires: ['bash'],
+    heading: 'exit',
+    requires: ['bash', 'cat'],
+    partial: 'the entry\'s closing advice — if you must print, print first and judge second — is a practice rather than a command, so nothing here executes it',
     trap: () => {
       const echoed = sh('bash', 'false; echo "EXIT=$?"');
       const piped = sh('bash', 'false | cat');
@@ -240,6 +303,8 @@ const PROBES = [
         // the half it managed: the coverage line otherwise counts this entry as
         // fully probed on a host that never ran its second shell.
         partial: zshPipe ? null : 'the entry\'s zsh half (${PIPESTATUS[0]} expanding to empty, and $pipestatus[1] against it) needs a zsh, and this host has none',
+        // Kept even when the zsh half runs: the entry ends in advice, and
+        // advice is not a command this probe can execute.
         detail: `false; echo "EXIT=$?" prints ${echoed.stdout.trim()} and exits ${echoed.status}; false | cat exits ${piped.status}`
           + (zshPipe
             ? `; in zsh, exit \${PIPESTATUS[0]} exits ${zshPipe.status} — the bash form expands to empty there`
@@ -261,8 +326,8 @@ const PROBES = [
   {
     n: 3,
     title: '2>/dev/null on a measurement hides that it failed',
-    heading: "measurement",
-    requires: ['bash', 'git'],
+    heading: 'measurement',
+    requires: ['bash', 'git', 'head', 'wc'],
     setup: dir => {
       initRepo(dir);
       write(dir, 'tracked.txt', 'nothing of interest here\n');
@@ -272,23 +337,27 @@ const PROBES = [
     // The trap is not that the command fails. It is that a failed command and a
     // real zero-hit search become the same bytes once stderr is thrown away.
     trap: dir => {
-      const opts = { cwd: dir, env: GIT_ENV };
+      const opts = { cwd: dir, env: gitEnv(dir) };
+      const control = sh('bash', 'git grep -l "nothing of interest"', opts);
       const broken = sh('bash', 'git grep -l NEEDLE_XYZ --untracked 2>/dev/null', opts);
       const zeroHit = sh('bash', 'git grep -l ABSENT_QQQ_PATTERN 2>/dev/null', opts);
       const truncated = sh('bash', "printf '%s\\n' a b c d e f g h i j k l m | head -5 | wc -l", opts);
+      // Without this, "both printed nothing" is also satisfied by a repository
+      // that can find nothing at all.
+      const searchable = control.status === 0 && control.stdout.includes('tracked.txt');
       // The exit codes must differ. Without that, two commands that failed the
       // same way satisfy "indistinguishable" and the detail line prints its own
       // contradiction — measured on a directory with no repository in it:
       // ok: true beside "only the exit code still separates them (128 vs 128)".
       const indistinguishable = broken.stdout === zeroHit.stdout && broken.stderr === '' && zeroHit.stderr === '';
       return {
-        ok: indistinguishable && broken.stdout === '' && broken.status !== zeroHit.status
+        ok: searchable && indistinguishable && broken.stdout === '' && broken.status !== zeroHit.status
           && Number(truncated.stdout.trim()) === 5,
-        detail: `a usage error and a real zero-hit search print the same ${broken.stdout.length} bytes — only the exit code still separates them (${broken.status} vs ${zeroHit.status}); head -5 on a 13-line measurement reports ${truncated.stdout.trim()}`,
+        detail: `in a repository that does find things (${control.stdout.trim() || 'nothing'}, exit ${control.status}), a usage error and a real zero-hit search print the same ${broken.stdout.length} bytes — only the exit code still separates them (${broken.status} vs ${zeroHit.status}); head -5 on a 13-line measurement reports ${truncated.stdout.trim()}`,
       };
     },
     guard: dir => {
-      const opts = { cwd: dir, env: GIT_ENV };
+      const opts = { cwd: dir, env: gitEnv(dir) };
       const broken = sh('bash', 'git grep -l NEEDLE_XYZ --untracked', opts);
       const zeroHit = sh('bash', 'git grep -l ABSENT_QQQ_PATTERN', opts);
       const full = sh('bash', "printf '%s\\n' a b c d e f g h i j k l m | wc -l", opts);
@@ -302,8 +371,8 @@ const PROBES = [
   {
     n: 4,
     title: 'a failed extraction looks exactly like a result',
-    heading: "extraction",
-    requires: ['bash'],
+    heading: 'extraction',
+    requires: ['bash', 'sed', 'wc', 'tr'],
     setup: dir => {
       write(dir, 'nomarkers.txt', 'line one\nline two\nline three\n');
       write(dir, 'markers.txt', 'start\nAAA\npayload\nBBB\nend\n');
@@ -331,8 +400,9 @@ const PROBES = [
   {
     n: 5,
     title: 'git grep -E is POSIX ERE — and which escapes fail depends on the host',
-    heading: "POSIX",
+    heading: 'POSIX',
     requires: ['git'],
+    partial: 'the entry also tells you to counter-test every new negative check by planting a match — a practice rather than a command, and not something this probe can run on your behalf',
     setup: dir => {
       initRepo(dir);
       write(dir, 'tracked.txt', 'hello world\nvalue 7 here\nnothing here\n');
@@ -372,7 +442,7 @@ const PROBES = [
   {
     n: 6,
     title: 'git grep without --untracked cannot see the files you just made',
-    heading: "untracked",
+    heading: 'untracked',
     requires: ['git'],
     setup: dir => {
       initRepo(dir);
@@ -380,11 +450,19 @@ const PROBES = [
       commitAll(dir, 'fixture');
       write(dir, 'brand-new.txt', 'NEEDLE_SIX lives here\n');
     },
+    // The control is the point. "0 hits" satisfies this assertion just as well
+    // when the search sees *nothing* — an ignore rule, an empty repository, a
+    // fixture that never committed — and then the probe reports the trap
+    // reproducing for a reason that has nothing to do with the trap. So the
+    // same search must find the committed file in the same breath.
+    partial: 'the entry\'s second half — name the search surface in the check\'s own output — is a practice rather than a command, and its node_modules corollary needs a repository this probe does not build',
     trap: dir => {
+      const control = git(dir, ['grep', '-l', 'nothing of interest']);
       const r = git(dir, ['grep', '-l', 'NEEDLE_SIX']);
       return {
-        ok: r.status === 1 && r.stdout === '',
-        detail: `a file written but not committed → git grep -l finds 0 hits, exit ${r.status}, while the file sits in the work tree`,
+        ok: control.status === 0 && control.stdout.includes('tracked.txt')
+          && r.status === 1 && r.stdout === '',
+        detail: `the same search finds the committed file (${control.stdout.trim() || 'nothing'}, exit ${control.status}) and not the one written but never committed (${r.stdout.trim() || '0 hits'}, exit ${r.status}) — which rules out "it saw nothing at all"`,
       };
     },
     guard: dir => {
@@ -399,8 +477,8 @@ const PROBES = [
   {
     n: 8,
     title: 'ANSI colour codes defeat a grep on tool output',
-    heading: "ANSI",
-    requires: ['bash', 'perl'],
+    heading: 'ANSI',
+    requires: ['bash', 'perl', 'grep'],
     partial: 'the entry\'s second-order half — that diffing error lists *with* line numbers measures code shifts rather than new errors — needs two runs of a real tool and is not probed here',
     // The fixture is written from Node, not from printf: it has to be the same
     // bytes under bash 3.2 and bash 5, and \033 versus \e is precisely the kind
@@ -425,7 +503,7 @@ const PROBES = [
   {
     n: 11,
     title: 'an unquoted ": " inside a YAML value is a hard parse error',
-    heading: "YAML",
+    heading: 'YAML',
     requires: ['ruby'],
     partial: 'only the parse half — that a broken agent file is skipped whole while a broken SKILL.md loads with empty metadata is Claude Code behaviour, and there is no binary on this host to measure it against',
     trap: () => {
@@ -464,31 +542,62 @@ const SKIPPED = {
 
 const HAVE = {};
 
+// Only ENOENT means absent. A tool whose `--version` exits non-zero is still a
+// tool, and folding that into "absent" silently drops its probe: measured with
+// a zsh wrapper that exits 3 on `--version`, the guard printed "zsh absent",
+// skipped entry 1 and exited 0. Presence and version are two questions, and
+// this used to answer both with one value.
+const POSIX_TOOLS = ['sed', 'wc', 'tr', 'head', 'grep', 'cat'];
+
 function detect() {
   const versionOf = (tool, args, pick) => {
     const r = run(tool, args);
-    if (r.missing || r.status !== 0) return null;
-    return pick(r.stdout) || null;
+    if (r.missing) return null;
+    if (r.status !== 0) return `present (\`${tool} ${args.join(' ')}\` exited ${r.status})`;
+    return pick(r.stdout) || 'present (version unreadable)';
   };
   HAVE.bash = versionOf('bash', ['--version'], s => firstLine(s).replace(/^GNU bash, version /, ''));
   HAVE.zsh = versionOf('zsh', ['--version'], s => firstLine(s).replace(/^zsh /, ''));
   HAVE.git = versionOf('git', ['--version'], s => firstLine(s).replace(/^git version /, ''));
   HAVE.perl = versionOf('perl', ['-e', 'print $^V'], s => s.trim());
   HAVE.ruby = versionOf('ruby', ['--version'], s => firstLine(s).replace(/^ruby /, '').split(' ')[0]);
+  // The POSIX tools the probes actually spawn. Without these in `requires`, a
+  // host missing `sed` reads as "trap 4 no longer reproduces — re-verify the
+  // catalog", which is a lie about the catalog.
+  for (const tool of POSIX_TOOLS) HAVE[tool] = run(tool, ['--version']).missing ? null : 'present';
   const uname = run('uname', ['-sr']);
   HAVE.os = uname.status === 0 ? uname.stdout.trim() : `${process.platform} ${process.arch}`;
   HAVE.node = process.version;
 }
 
-const envLine = () => 'environment: ' + [
-  HAVE.os,
-  `bash ${HAVE.bash || 'absent'}`,
-  `zsh ${HAVE.zsh || 'absent'}`,
-  `git ${HAVE.git || 'absent'}`,
-  `perl ${HAVE.perl || 'absent'}`,
-  `ruby ${HAVE.ruby || 'absent'}`,
-  `node ${HAVE.node}`,
-].join(' · ');
+const envLine = () => {
+  const missing = POSIX_TOOLS.filter(t => !HAVE[t]);
+  return 'environment: ' + [
+    HAVE.os,
+    `bash ${HAVE.bash || 'absent'}`,
+    `zsh ${HAVE.zsh || 'absent'}`,
+    `git ${HAVE.git || 'absent'}`,
+    `perl ${HAVE.perl || 'absent'}`,
+    `ruby ${HAVE.ruby || 'absent'}`,
+    `node ${HAVE.node}`,
+  ].join(' · ')
+    + (missing.length ? ` · POSIX tools absent: ${missing.join(', ')}` : '');
+};
+
+// Tools this run was told the host must have. The workflow passes them, because
+// "the image provides bash, git, perl and ruby" is a statement about CI and
+// belongs where CI is configured — and because without it a runner image that
+// drops ruby just probes less and stays green. Measured before the flag existed:
+// a PATH without git reported "OK — 5 of 15" and exited 0. zsh is deliberately
+// not on the workflow's list; that absence is the known, printed gap.
+function requiredTools(argv) {
+  const out = [];
+  argv.forEach((a, i) => {
+    if (a === '--require' && argv[i + 1]) out.push(...argv[i + 1].split(','));
+    else if (a.startsWith('--require=')) out.push(...a.slice('--require='.length).split(','));
+  });
+  return [...new Set(out.map(s => s.trim()).filter(Boolean))];
+}
 
 // ---------------------------------------------------------------- the catalog
 
@@ -501,16 +610,23 @@ const envLine = () => 'environment: ' + [
 // reproduced | guard holds" and exiting 0 — failure class 5 committed by the
 // file whose header warns about it. Each probe now also names a word its
 // entry's heading has to contain, the same shape as the READMEs' trap-refs.
+//
+// A heading that is nearly an entry heading is louder than one that is missing
+// — the lesson check-counts.mjs learned about markers, one file over. `### 16)`
+// and `##  7)` (two spaces) both fail the exact form, and both used to simply
+// vanish from the register: the first silently, the second as a confusing
+// `no-such-entry` about a number that is right there in the file.
 function catalogEntries(text) {
-  const found = [];
+  const found = [], malformed = [];
   let inFence = false;
-  for (const line of lines(text.replace(/\r\n?/g, '\n'))) {
-    if (/^\s*```/.test(line)) { inFence = !inFence; continue; }
-    if (inFence) continue;
-    const m = /^## (\d+)\)\s*(.*)$/.exec(line);
-    if (m) found.push({ n: Number(m[1]), title: m[2].trim() });
-  }
-  return found;
+  lines(text.replace(/\r\n?/g, '\n')).forEach((line, i) => {
+    if (/^\s*```/.test(line)) { inFence = !inFence; return; }
+    if (inFence) return;
+    const exact = /^## (\d+)\)\s*(.*)$/.exec(line);
+    if (exact) { found.push({ n: Number(exact[1]), title: exact[2].trim() }); return; }
+    if (/^#{1,6}\s*\d+\s*\)/.test(line)) malformed.push({ line: i + 1, text: flat(line) });
+  });
+  return { found, malformed };
 }
 
 // ---------------------------------------------------------------- measuring
@@ -540,9 +656,11 @@ function observe(probe) {
 // against: exit 1 is correct, but "readFileUtf8" is not a diagnosis.
 function measure() {
   detect();
-  let entries = [], catalogError = null;
+  let entries = [], malformed = [], catalogError = null;
   try {
-    entries = catalogEntries(readFileSync(join(ROOT, CATALOG), 'utf8'));
+    const parsed = catalogEntries(readFileSync(join(ROOT, CATALOG), 'utf8'));
+    entries = parsed.found;
+    malformed = parsed.malformed;
   } catch (e) {
     catalogError = e && e.message ? e.message : String(e);
   }
@@ -551,9 +669,13 @@ function measure() {
   return {
     numbers: entries.map(e => e.n),
     titles,
+    malformed,
     catalogError,
+    have: { ...HAVE },
+    required: requiredTools(process.argv),
     probes: PROBES.map(p => ({
-      n: p.n, title: p.title, heading: p.heading, partial: p.partial || null, obs: observe(p),
+      n: p.n, title: p.title, heading: p.heading, requires: [...(p.requires || [])],
+      partial: p.partial || null, obs: observe(p),
     })),
     skipped: { ...SKIPPED },
   };
@@ -562,6 +684,9 @@ function measure() {
 const clone = s => ({
   numbers: [...s.numbers],
   titles: { ...s.titles },
+  malformed: s.malformed.map(m => ({ ...m })),
+  have: { ...s.have },
+  required: [...s.required],
   catalogError: s.catalogError,
   probes: s.probes.map(p => ({
     ...p,
@@ -581,7 +706,18 @@ function judge(state) {
   const fail = (code, text) => errors.push({ code, text });
   const report = [];
   const probed = [], notProbed = [];
-  const where = `${HAVE.os}${HAVE.bash ? `, bash ${HAVE.bash}` : ''}`;
+  // Name the versions of the tools *this* probe used. The single global
+  // "where" printed bash's version under a zsh finding, which is a small lie
+  // in the one sentence that asks somebody to go re-verify an entry.
+  const whereFor = p => [state.have.os, ...(p.requires || []).map(t => `${t} ${state.have[t] || 'absent'}`)].join(', ');
+
+  // A tool the caller declared mandatory is not allowed to be quietly absent;
+  // otherwise a shrinking image just probes less and stays green.
+  for (const tool of state.required) {
+    if (!state.have[tool]) {
+      fail('required-tool-missing', `this run requires ${tool} and the host has none — every probe needing it would be skipped, and a smaller green is not a green`);
+    }
+  }
 
   const byNumber = new Map();
   for (const p of state.probes) {
@@ -595,6 +731,10 @@ function judge(state) {
   if (state.catalogError) {
     fail('catalog-unreadable', `${CATALOG} could not be read (${state.catalogError}) — this guard takes its register from the catalog itself, so there is nothing here to verify against`);
     return { errors, report: [], probed: [], notProbed: [], coverage: `coverage: none — ${CATALOG} could not be read` };
+  }
+
+  for (const m of state.malformed) {
+    fail('heading-malformed', `${CATALOG}:${m.line} reads "${m.text}" — that is nearly an entry heading and counts as none; entries are exactly "## N) title"`);
   }
 
   // One number, one line: a repeat on either side would print a trap twice and
@@ -655,8 +795,8 @@ function judge(state) {
     for (const p of here) {
       const { obs } = p;
       if (obs.error) {
-        fail('probe-error', `trap ${n}: the probe could not run at all (${obs.error}) — no verdict either way, which is not a pass`);
-        report.push({ n, text: `trap ${String(n).padStart(2)}: ERROR      — ${p.title}: ${obs.error}` });
+        fail('probe-error', `trap ${n}: the probe could not run at all (${flat(obs.error)}) — no verdict either way, which is not a pass`);
+        report.push({ n, text: `trap ${String(n).padStart(2)}: ERROR      — ${p.title}: ${flat(obs.error)}` });
         continue;
       }
       if (obs.missingTool) {
@@ -666,19 +806,20 @@ function judge(state) {
         continue;
       }
       probed.push(n);
+      const trapDetail = flat(obs.trap.detail), guardDetail = flat(obs.guard.detail);
       if (!obs.trap.ok) {
-        fail('trap-not-reproduced', `trap ${n} no longer reproduces on ${where} — re-verify and update the catalog; that is a finding, not a bug. Measured: ${obs.trap.detail}`);
+        fail('trap-not-reproduced', `trap ${n} no longer reproduces on ${whereFor(p)} — re-verify and update the catalog; that is a finding, not a bug. Measured: ${trapDetail}`);
       }
       if (!obs.guard.ok) {
-        fail('guard-does-not-hold', `the guard for trap ${n} does not hold on ${where} — the entry recommends a remedy that no longer works. Measured: ${obs.guard.detail}`);
+        fail('guard-does-not-hold', `the guard for trap ${n} does not hold on ${whereFor(p)} — the entry recommends a remedy that no longer works. Measured: ${guardDetail}`);
       }
       // Partial coverage is declared statically by the probe and, where a host
       // decides it, by the half that could not run.
-      const partials = [p.partial, obs.trap.partial, obs.guard.partial].filter(Boolean);
+      const partials = [p.partial, obs.trap.partial, obs.guard.partial].filter(Boolean).map(flat);
       report.push({
         n,
-        text: `trap ${String(n).padStart(2)}: ${obs.trap.ok ? 'reproduced' : 'NOT REPROD'} — ${obs.trap.detail}`
-          + ` | ${obs.guard.ok ? 'guard holds' : 'GUARD FAILS'}: ${obs.guard.detail}`
+        text: `trap ${String(n).padStart(2)}: ${obs.trap.ok ? 'reproduced' : 'NOT REPROD'} — ${trapDetail}`
+          + ` | ${obs.guard.ok ? 'guard holds' : 'GUARD FAILS'}: ${guardDetail}`
           + (partials.length ? ` | partial: ${partials.join('; ')}` : ''),
       });
     }
@@ -697,10 +838,19 @@ function judge(state) {
 // Each returns {state, applied}. `applied: false` means the mutation found
 // nothing to falsify — a failed self-test, not a passed one: it is how a probe
 // that silently stopped recording anything gets caught.
+// A probe whose entry is no longer in the register is not judged at all, so
+// inverting its record changes nothing and the counter-test reads as "the guard
+// proves nothing here" — the second shape of the bug run 32744393366 had.
+// Measured before the guard here existed: deleting `## 8)` from the catalog, or
+// prefixing an unbalanced fence, or removing the file, all produced only
+// "counter-test 13/26 … did not raise trap-not-reproduced" under --self-test,
+// while the plain run named `no-such-entry` and `catalog-unreadable` correctly.
+// --self-test is the only mode CI runs.
 function flip(state, n, half) {
   const out = clone(state);
   const p = out.probes.find(q => q.n === n);
-  if (!p || p.obs.error || p.obs.missingTool || !p.obs[half] || p.obs[half].ok !== true) {
+  if (!p || out.catalogError || !out.numbers.includes(n)) return { state: out, applied: false };
+  if (p.obs.error || p.obs.missingTool || !p.obs[half] || p.obs[half].ok !== true) {
     return { state: out, applied: false };
   }
   p.obs[half] = { ...p.obs[half], ok: false };
@@ -727,6 +877,24 @@ const STRUCTURAL_TESTS = [
       const out = clone(state);
       if (out.probes.length === 0) return { state: out, applied: false };
       out.skipped[out.probes[0].n] = 'a reason long enough to look like a real one';
+      return { state: out, applied: true };
+    },
+  },
+  {
+    expect: 'required-tool-missing',
+    name: 'a tool declared mandatory that this host does not have',
+    mutate: state => {
+      const out = clone(state);
+      out.required = [...out.required, 'a-tool-no-host-carries'];
+      return { state: out, applied: true };
+    },
+  },
+  {
+    expect: 'heading-malformed',
+    name: 'an entry heading with one hash too many',
+    mutate: state => {
+      const out = clone(state);
+      out.malformed = [...out.malformed, { line: 1, text: '### 16) nearly an entry' }];
       return { state: out, applied: true };
     },
   },
@@ -823,6 +991,56 @@ const STRUCTURAL_TESTS = [
 // ever printed — which is exactly what happened the first time this guard met
 // a host it had not been written on, so the withheld ones are counted out loud
 // rather than quietly dropped.
+// Not every property is proved by making the guard red. "A hostile environment
+// does not change the verdict" is proved by running every probe again inside
+// one and getting the same answers — so the probes execute a second time here,
+// under an environment built from the five leaks that were measured turning
+// them false-red. This is the only part of the self-test that costs processes,
+// and it is the part that would otherwise decay into a comment.
+function pollute(dir) {
+  writeFileSync(join(dir, 'bash_env.sh'), 'echo noise-from-BASH_ENV\n');
+  writeFileSync(join(dir, '.zshenv'), 'setopt shwordsplit nonomatch\n');
+  const xdgGit = join(dir, 'xdg', 'git');
+  mkdirSync(xdgGit, { recursive: true });
+  // Names every fixture file the git probes create, which is what made trap 6
+  // report that its own remedy had stopped working.
+  writeFileSync(join(xdgGit, 'ignore'), 'brand-new.txt\nuntracked.txt\ntracked.txt\n');
+  return {
+    BASH_ENV: join(dir, 'bash_env.sh'),
+    ZDOTDIR: dir,
+    SHELLOPTS: 'xtrace',
+    CDPATH: '/',
+    GIT_TRACE: '1',
+    XDG_CONFIG_HOME: join(dir, 'xdg'),
+    GIT_CONFIG_COUNT: '1',
+    GIT_CONFIG_KEY_0: 'core.excludesFile',
+    GIT_CONFIG_VALUE_0: join(xdgGit, 'ignore'),
+  };
+}
+
+const verdicts = probes => probes.map(p => [
+  p.n,
+  p.obs.missingTool || '-',
+  p.obs.error ? 'error' : '-',
+  p.obs.trap ? String(p.obs.trap.ok) : '-',
+  p.obs.guard ? String(p.obs.guard.ok) : '-',
+].join(':'));
+
+function environmentInvariance(state) {
+  const dir = mkdtempSync(join(tmpdir(), 'verify-traps-hostile-'));
+  const saved = { ...process.env };
+  try {
+    Object.assign(process.env, pollute(dir));
+    const again = PROBES.map(p => ({ n: p.n, obs: observe(p) }));
+    const before = verdicts(state.probes), after = verdicts(again);
+    return { same: before.join('|') === after.join('|'), before, after };
+  } finally {
+    for (const key of Object.keys(process.env)) if (!(key in saved)) delete process.env[key];
+    Object.assign(process.env, saved);
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
 function counterTests(state) {
   const tests = [], withheld = [];
   const EXPECT = { trap: 'trap-not-reproduced', guard: 'guard-does-not-hold' };
@@ -898,6 +1116,14 @@ if (process.argv.includes('--self-test')) {
     const raised = judge(falsified).errors.filter(e => !baseline.has(e.text));
     const hit = raised.find(e => e.code === test.expect);
     if (!hit) {
+      // Same rule as above, at the other end of the counter-test: while the
+      // untouched run is red, a counter-test that cannot land is withheld and
+      // named, never allowed to replace the finding with a complaint about
+      // itself.
+      if (alreadyRed) {
+        withheld.push(`${test.expect} (could not be planted on this host — the report below stands instead)`);
+        continue;
+      }
       console.error(`SELF-TEST FAILED: counter-test ${label} did not raise "${test.expect}".`);
       console.error(raised.length ? `It raised: ${raised.map(e => e.code).join(', ')}` : 'It raised no new error at all.');
       console.error('The guard proves nothing here. Fix the guard before trusting it.');
@@ -916,6 +1142,20 @@ if (process.argv.includes('--self-test')) {
     process.exit(1);
   }
   for (const code of uncovered) withheld.push(`${code} (branch unproved on this host)`);
+
+  const hostile = environmentInvariance(state);
+  if (!hostile.same) {
+    console.error('SELF-TEST FAILED: a hostile environment changed the verdicts.');
+    console.error('  BASH_ENV, ZDOTDIR, SHELLOPTS=xtrace, CDPATH, GIT_TRACE, XDG_CONFIG_HOME and GIT_CONFIG_* were planted;');
+    console.error('  the probes must be unmoved by all of them, because a false red here says "your catalog is stale".');
+    for (let i = 0; i < Math.max(hostile.before.length, hostile.after.length); i++) {
+      if (hostile.before[i] !== hostile.after[i]) {
+        console.error(`  trap ${hostile.before[i] || '(none)'} became ${hostile.after[i] || '(none)'} (n:missingTool:error:trapOk:guardOk)`);
+      }
+    }
+    process.exit(1);
+  }
+  console.log('self-test invariance: a hostile environment (BASH_ENV, ZDOTDIR, SHELLOPTS=xtrace, CDPATH, GIT_TRACE, XDG_CONFIG_HOME, GIT_CONFIG_*) leaves every verdict unchanged');
 
   const verdict = withheld.length === 0 ? 'OK' : 'OK, in part';
   console.log(`self-test: ${verdict} — ${passed} of ${tests.length} counter-tests raised an error of their own, covering ${Object.keys(BRANCHES).length - uncovered.length} of ${Object.keys(BRANCHES).length} error branches`
