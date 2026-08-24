@@ -306,14 +306,22 @@ const PROBES = [
     requires: ['git'],
     setup: dir => {
       initRepo(dir);
-      write(dir, 'tracked.txt', 'hello world\nnothing here\n');
+      write(dir, 'tracked.txt', 'hello world\nvalue 7 here\nnothing here\n');
       commitAll(dir, 'fixture');
     },
+    // All three escapes the entry names are measured, not just the one it
+    // asserts on: which of them a host's ERE understands is the whole question,
+    // and a detail line that only reports the asserted one cannot answer it.
     trap: dir => {
-      const r = git(dir, ['grep', '-E', 'hello\\sworld']);
+      const hits = pattern => {
+        const r = git(dir, ['grep', '-E', pattern]);
+        return { n: r.status === 0 ? lines(r.stdout.trim()).length : 0, status: r.status };
+      };
+      const s = hits('hello\\sworld'), d = hits('value \\d here'), b = hits('\\bhello\\b');
       return {
-        ok: r.status === 1 && r.stdout === '',
-        detail: `git grep -E 'hello\\sworld' over a file containing "hello world" → 0 hits, exit ${r.status}; that exit throws inside execFileSync, and reading it as "zero matches" is this entry's own second half`,
+        ok: s.n === 0 && s.status === 1,
+        detail: `over "hello world" / "value 7 here": \\s → ${s.n} hit(s) exit ${s.status}, \\d → ${d.n} hit(s) exit ${d.status}, \\b → ${b.n} hit(s) exit ${b.status}`
+          + `; exit 1 for zero matches throws inside execFileSync, and reading it as "zero matches" instead of "command failed" is this entry's own second half`,
       };
     },
     guard: dir => {
@@ -735,22 +743,47 @@ const STRUCTURAL_TESTS = [
   },
 ];
 
+// A half that is already failing needs no counter-test: it is not a claim
+// waiting for proof, it is the finding this guard exists to produce, and the
+// run below reports it in full. Inverting it would only ask "does a red half
+// go red", find nothing to falsify, and abort the run before the finding is
+// ever printed — which is exactly what happened the first time this guard met
+// a host it had not been written on, so the withheld ones are counted out loud
+// rather than quietly dropped.
 function counterTests(state) {
-  const live = ranProbes(state);
-  const perProbe = live.flatMap(p => [
-    { expect: 'trap-not-reproduced', name: `trap ${p.n} recorded as no longer reproducing`, mutate: s => flip(s, p.n, 'trap') },
-    { expect: 'guard-does-not-hold', name: `the guard for trap ${p.n} recorded as no longer holding`, mutate: s => flip(s, p.n, 'guard') },
-  ]);
-  return { tests: [...perProbe, ...STRUCTURAL_TESTS], live };
+  const tests = [], withheld = [];
+  const EXPECT = { trap: 'trap-not-reproduced', guard: 'guard-does-not-hold' };
+  const NAME = {
+    trap: n => `trap ${n} recorded as no longer reproducing`,
+    guard: n => `the guard for trap ${n} recorded as no longer holding`,
+  };
+  for (const p of state.probes) {
+    if (p.obs.error) { withheld.push(`${p.n} (the probe could not run)`); continue; }
+    if (p.obs.missingTool) { withheld.push(`${p.n} (${p.obs.missingTool} absent)`); continue; }
+    for (const half of ['trap', 'guard']) {
+      if (p.obs[half] && p.obs[half].ok === true) {
+        tests.push({ expect: EXPECT[half], name: NAME[half](p.n), mutate: s => flip(s, p.n, half) });
+      } else {
+        withheld.push(`${p.n} ${half} form (already red — reported below, not re-proved here)`);
+      }
+    }
+  }
+  return { tests: [...tests, ...STRUCTURAL_TESTS], withheld };
 }
 
 // ---------------------------------------------------------------- run
 
 const state = measure();
 
+// Before anything can fail: which host judged. A log that ends in a self-test
+// abort should still say where it ran.
+console.log(envLine());
+
 if (process.argv.includes('--self-test')) {
-  const baseline = new Set(judge(state).errors.map(e => e.text));
-  const { tests, live } = counterTests(state);
+  const base = judge(state);
+  const baseline = new Set(base.errors.map(e => e.text));
+  const firing = new Set(base.errors.map(e => e.code));
+  const { tests, withheld } = counterTests(state);
   let passed = 0;
 
   for (const [i, test] of tests.entries()) {
@@ -773,22 +806,20 @@ if (process.argv.includes('--self-test')) {
     console.log(`self-test ${label}: ${test.expect}`);
   }
 
-  const uncovered = Object.keys(BRANCHES).filter(code => !tests.some(t => t.expect === code));
+  // A branch already firing in the untouched run needs no synthetic proof that
+  // it can fire; it is firing. Anything else without a counter-test is a claim.
+  const uncovered = Object.keys(BRANCHES).filter(code => !tests.some(t => t.expect === code) && !firing.has(code));
   if (uncovered.length > 0) {
-    console.error(`SELF-TEST FAILED: ${uncovered.length} error branch(es) without a counter-test: ${uncovered.join(', ')}`);
+    console.error(`SELF-TEST FAILED: ${uncovered.length} error branch(es) with neither a counter-test nor a live finding: ${uncovered.join(', ')}`);
     console.error('An untested branch is a claim. Add its counter-test before trusting the guard.');
     process.exit(1);
   }
 
-  const withheld = state.probes.filter(p => p.obs.missingTool || p.obs.error);
   console.log(`self-test: OK — ${passed} of ${tests.length} counter-tests raised an error of their own, covering ${Object.keys(BRANCHES).length} error branches`
-    + (withheld.length > 0
-      ? `; ${withheld.length * 2} not generated, because ${withheld.length} probe(s) could not run here: ${withheld.map(p => `${p.n} (${p.obs.missingTool ? `${p.obs.missingTool} absent` : 'probe error'})`).join(', ')}`
-      : ''));
+    + (withheld.length > 0 ? `; ${withheld.length} withheld: ${withheld.join(', ')}` : ''));
 }
 
 const { errors, report, probed, notProbed, coverage } = judge(state);
-console.log(envLine());
 for (const line of report) console.log(line.text);
 console.log(coverage);
 if (errors.length > 0) {
