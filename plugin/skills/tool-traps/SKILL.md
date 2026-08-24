@@ -14,8 +14,9 @@ Three rules for using this catalog:
    differently, the catalog is wrong for you: re-verify, then rely on it. In
    the source repository, CI re-runs at each push every trap it can put a
    probe behind, the trap form first and then the remedy the entry
-   prescribes, and names the rest with number and reason. Its output, not this date, tells
-   you which of these entries were measured most recently and on what.
+   prescribes, and names the rest with number and reason. Its output, not
+   this date, tells you which of these entries were measured most recently
+   and on what.
 3. **Being warned is not enough.** In the source corpus, two traps were hit
    *while the session's own brief carried the warning word for word*. The
    guard column exists because knowledge does not survive contact with
@@ -115,8 +116,9 @@ zero hits in a repo full of them, and a check built on it stays green
 forever. The nastier shape: it works on the machine it was written on and
 finds nothing on the machine it runs on, or the reverse.
 
-**Mechanism:** `git grep -E` does not compile POSIX ERE; it hands the
-pattern to the platform's regex library. glibc's carries the GNU operators
+**Mechanism:** `git grep -E` does not stop at POSIX ERE; it hands the
+pattern to the platform's regex library, which on glibc carries GNU
+extensions on top. glibc's carries the GNU operators
 `\s`, `\b` and `\w`; the BSD one on macOS does not, and `\d` is a GNU
 operator nowhere. Use `[[:space:]]`, `[[:digit:]]`, or `git grep -P` where
 it exists. Second trap in the same tool: `git grep` exits 1 on zero
@@ -134,8 +136,9 @@ glibc), over the same fixture: `\s` → 1 hit, exit 0, and `\b` → 1 hit, exit
 0, while `\d` → 0 hits, exit 1. The first published version of this entry
 called all three "silently match nothing": true where it had been measured,
 false one runner away. This repository's own verify-traps guard found that
-on its first run against a host the entry was not written on, which is the
-whole argument for dating these stamps and re-running them.
+on its second run against a host the entry was not written on; the first
+run aborted inside its own self-test and printed nothing. Dating these
+stamps and re-running them is the whole argument.
 
 **Guard:** POSIX classes only (or `-P`); treat exit 1 as "zero matches", not
 as failure; and give every new negative check a counter-test that must fail
@@ -326,9 +329,10 @@ same exit it gives when the string genuinely appears nowhere.
 **Mechanism:** both names resolve to shell functions from the session's
 shell snapshot rather than to the system tools; they run the search engines
 embedded in the Claude Code binary (`ARGV0=ugrep claude -G …`,
-`ARGV0=rg claude …`). `type grep` prints the function body; `which ugrep`
-finds no binary at all. The two functions are not alike. The `grep` one
-prepends flags of its own in front of your arguments: `--ignore-files
+`ARGV0=rg claude …`). `type -f grep` prints the function body in zsh, and
+`type grep` does it in bash; `which ugrep` finds no binary at all. The two
+functions are not alike. The `grep` one prepends flags of its own in front
+of your arguments: `--ignore-files
 --hidden -I --exclude-dir=.git`, plus one exclusion per further VCS
 directory. `--ignore-files` applies every `.gitignore` it finds, with no
 git repository required for it to take effect, and `--exclude-dir=.git`
@@ -338,9 +342,9 @@ anyway. The `rg` function forwards your arguments unchanged, and is
 defined at all only on a host with no ripgrep of its own, though ripgrep's
 defaults skip ignored and hidden files in any case. Symptom (b) below was
 measured on `grep`. Nothing here governs order; `-J1` (one worker) makes
-the order stable, which is the evidence that the engines walk several
-files at once and print each file's block once that file is finished: the
-order follows completion, not the command line.
+the order stable, so the engines evidently walk several files at once and
+print each file's block once that file is finished: the order follows
+completion, not the command line.
 
 **Verified locally 2026-08-24** (Claude Code 2.1.241, zsh 5.9, macOS
 26.0.1), symptom (a): 10 identical runs of `grep -o 'section: [a-z-]*'
@@ -367,9 +371,9 @@ tool printed the hit. The hidden file was found by both.
 file per command, or group by the `file:` prefix these tools already print
 when given more than one file; if a fixed order is required, use a flag
 you have measured on your own version. When absence is the answer, run
-`command -p grep`, which is the system tool with system semantics. And run
-`type grep` once in any shell you are about to trust: what a name resolves
-to is itself a measurement.
+`command -p grep`, which is the system tool with system semantics. And ask
+any shell you are about to trust what its names resolve to (`type -f grep`
+in zsh, `type grep` in bash): that answer is a measurement too.
 
 ---
 

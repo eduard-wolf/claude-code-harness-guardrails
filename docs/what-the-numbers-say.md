@@ -44,10 +44,10 @@ Three honest limits, stated in the source itself and sharpened here:
   improved, the measurement cannot attribute it to the optimization.
 - **The metric itself is under-documented.** "Context drift" was measured in
   the session that ran the comparison; the pre-series and the metric's exact
-  definition were never written down. By this repository's own
-  standard, the headline number does not fully meet the evidence bar. That,
-  too, is a finding, and the reason the chain now writes measurements down
-  before citing them.
+  definition were never persisted. By this repository's own standard, the
+  headline number does not fully meet the evidence bar. That, too, is a
+  finding, and the reason the chain now writes measurements down before
+  citing them.
 
 The sentence the source corpus uses for all of this:
 
@@ -84,11 +84,10 @@ before-push; n = 3 — no trend yet, but counted from now on).
   match no code path. Fix: a gate workflow with no path filter.
 - **A 25.0% cut of the context file did not stay cut.** 181,534 → 136,245
   characters. But 121 of its 340 content units were mixed: history and live
-  rules interleaved, not mechanically separable. The source reports the
-  mixed share as 44.6% of the file, which is not 121 of 340; it does not say
-  what that percentage is a share of. The file regrows by ~6,200 characters
-  per session. The source's own verdict: the cut "bought time, built no
-  mechanism."
+  rules interleaved, not mechanically separable. The source's 44.6% is a
+  share of the file, not of those units: 121 of 340 is 35.6%. The file
+  regrows by ~6,200 characters per session. The source's own verdict: the
+  cut "bought time, built no mechanism."
 - **Of 69 coverage promises in 9 guard files, 3 were empty and 2 narrowed.**
   One guard surface had been "a promise about nothing" for 19 sessions: its
   extension filter matched zero files in the directory it claimed to scan.
@@ -153,10 +152,12 @@ re-runs the catalog's own claims on every push. Two entries did not survive
 it:
 
 - **Trap 5 was true where it had been measured and false one runner away.**
-  Found by the guard's first run against a host it was not written on. The
-  entry said `\s`, `\b` and `\d` all "silently match nothing" under a macOS
-  stamp. Over the same fixture: macOS with git 2.50.1 gives 0 hits and
-  exit 1 for all three; ubuntu-latest with git 2.55.0 and glibc gives `\s` 1
+  Found on the guard's first two runs against a host it was not written on:
+  the first aborted inside its own self-test and printed nothing, and the
+  second carried the measurement into the log. The entry said `\s`, `\b` and
+  `\d` all "silently match nothing" under a macOS stamp. Over the same
+  fixture: macOS with git 2.50.1 gives 0 hits and exit 1 for all three;
+  ubuntu-latest with git 2.55.0 and glibc gives `\s` 1
   hit at exit 0, `\b` 1 hit at exit 0, and `\d` 0 hits at exit 1. The entry
   had understated its own trap: the check does not fail everywhere; it
   changes its verdict with the machine. Corrected in `2ac3400`.
@@ -178,10 +179,10 @@ control.
 
 | Number | Source | Population |
 |---|---|---|
-| t ≈ 1.9, p ≈ 0.12; one pre-value below both post-values | meta-chain brief HE-3, verbatim | 2 post-optimization sessions vs. pre-series (pre-series never written down) |
+| t ≈ 1.9, p ≈ 0.12; one pre-value below both post-values | meta-chain brief HE-3, verbatim | 2 post-optimization sessions vs. pre-series (pre-series never persisted) |
 | 4 stale numbers stopped by CI; 4 caught pre-push | result reports RE-3b, HE-3 | living briefs at push time |
 | 62% pushes without run | result report HE-1 | 157 pushes / 11 days, `gh run list` |
-| −25.0% cut; 44.6% mixed units; ~6,200 chars/session regrowth | brief + result report HE-2 | context file, 181,534 chars, 340 units |
+| −25.0% cut; 44.6% of the file mixed; ~6,200 chars/session regrowth | brief + result report HE-2 | context file, 181,534 chars, 340 units |
 | 69 promises / 3 empty / 2 narrowed | result report AA-K1 | 9 guard files at HEAD |
 | 21 own defects / 0 by reading | result report HE-3 | one session's registered defects |
 | escape-rate points 1.49 / 1.02 / 0 per 1,000 lines | result report HE-3 | changed lines in src, services, scripts per session |

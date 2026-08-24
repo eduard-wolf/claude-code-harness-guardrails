@@ -9,9 +9,9 @@
 // and demands that the trap still happens, then runs *the remedy the entry
 // names against it* and demands that the trap stops happening. A probe that
 // cannot tell those two apart proves nothing about either. ("Names", not
-// "prints": entry 1's guard sentence prints an example that does not work —
-// see the finding below — so the probe runs the forms that sentence's rule
-// yields instead of its illustration, and prints the illustration's
+// "prints": entry 1's guard sentence once printed an example that did not
+// work — see the finding below — so the probe runs the forms that sentence's
+// rule yields rather than its illustration, and prints the unquoted form's
 // measurement alongside.)
 //
 // Red is the point here, not the accident:
@@ -61,14 +61,15 @@
 //   how many probes went unrun and why.
 //
 // A finding this guard produced while it was being built, kept here because
-// output is where such things belong: entry 1's guard sentence prints the array
-// form as `for f in ${(f)$(...)}`. Measured on zsh 5.9, that form yields *one*
-// item — `[a b c]`, the newlines collapsed to spaces — where `${(f)"$(...)"}`
-// yields three. The unquoted illustration rebuilds the very trap the entry
-// teaches. The sentence around it does say "quote everything", so the rule is
-// right and only the example is not; the probe below runs the two forms the
-// rule yields (`while read`, and the array form quoted), and prints the
-// measurement of the unquoted one beside them at every push.
+// this is where it was made: entry 1's guard sentence printed the array form as
+// `for f in ${(f)$(...)}`. Measured on zsh 5.9, that form yields *one* item —
+// `[a b c]`, the newlines collapsed to spaces — where `${(f)"$(...)"}` yields
+// three. The unquoted illustration rebuilt the very trap the entry teaches. The
+// sentence around it did say "quote everything", so the rule was right and only
+// the example was not. Corrected in 220828b; the probe below still runs the two
+// forms the rule yields (`while read`, and the array form quoted) and prints the
+// unquoted form's measurement beside them at every push, because the catalog
+// being right today is not a reason to stop measuring it.
 //
 // Self-test (a guard without a counter-test is a claim, not a guard):
 //   node guards/verify-traps.mjs --self-test
@@ -402,7 +403,7 @@ const PROBES = [
 
   {
     n: 5,
-    title: 'git grep -E is POSIX ERE — and which escapes fail depends on the host',
+    title: 'git grep -E uses the platform ERE — and which escapes fail depends on the host',
     heading: 'POSIX',
     requires: ['git'],
     partial: 'the entry also tells you to counter-test every new negative check by planting a match — a practice rather than a command, and not something this probe can run on your behalf',
