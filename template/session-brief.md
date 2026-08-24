@@ -18,6 +18,11 @@
   Everything in [brackets] is a placeholder. Sections marked (optional) can
   be dropped for small tasks. Keep the rest - each section exists because
   briefs without it measurably failed. See docs/method.md for the evidence.
+
+  Counting note: docs/method.md names ten parts and this file has twelve ##
+  sections. The lifecycle header is the frontmatter, not a section, and
+  three sections beyond the ten are practical rather than measured - "What
+  this is — and what it is not", "The mission", and "Guardrails".
 -->
 
 ---

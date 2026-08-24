@@ -51,8 +51,12 @@ ships a *seed* template, not a form to fill in per session.
 ## The ten parts
 
 For the template itself see
-[template/session-brief.md](../template/session-brief.md). What each part
-does, and the evidence it earned its place:
+[template/session-brief.md](../template/session-brief.md); it carries all
+ten, and still has twelve `##` sections — part 1 lives in the frontmatter
+rather than in a section, and three sections beyond these ten are
+practical rather than measured: what the session is and is not, the
+mission, and the project-specific guardrails. What each part does, and the
+evidence it earned its place:
 
 1. **Lifecycle header.** Status, chain position, predecessor's result,
    successor. A brief that knows whether it is still valid; completed briefs
