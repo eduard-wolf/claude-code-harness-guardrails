@@ -4,6 +4,14 @@
 # per commit (see trap catalog), and these guards are cheap enough to run
 # always. Each guard runs its built-in counter-test first (--self-test):
 # a guard that cannot fail on purpose proves nothing.
+#
+# The third guard is why the runner matters rather than merely being free
+# compute: it re-runs the trap catalog's own traps here, on a host that is
+# not the maintainer's machine, and prints the environment it judged on. What
+# this host cannot reproduce — the Claude Code harness is on no runner, and
+# whatever shells or interpreters this image happens not to carry — comes out
+# of it named, with a number and a reason, rather than silently dropped. The
+# guard reads which is which off this runner instead of off a software list.
 name: guards
 on:
   push:
@@ -21,3 +29,5 @@ jobs:
         run: node guards/check-readme-parity.mjs --self-test
       - name: Stated counts match measured counts
         run: node guards/check-counts.mjs --self-test
+      - name: Trap catalog still reproduces (and names what it cannot)
+        run: node guards/verify-traps.mjs --self-test
