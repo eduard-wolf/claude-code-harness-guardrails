@@ -94,13 +94,21 @@ repository's own commissioning brief while building it:
 every one with symptom, mechanism, verification date, and the guard against
 it. No brainstormed risks. Three samples:
 
-- `git grep -E 'foo\s*\('` finds **silently nothing** — POSIX ERE has no
-  `\s`. A check built on it stays green forever. (Trap 5)
-- `npm run build > log 2>&1; echo "EXIT=$?"` prints the right code — and
-  reports the `echo`'s exit 0 to your harness and CI. (Trap 2)
+- `description: Use when: always` is a hard YAML parse error: the agent is
+  simply gone ("Agent type not found"), the skill turns zombie — alive
+  under its slash command, dead in the automatic trigger. (Trap 11)
+- An agents directory created *mid-session* stays invisible until the next
+  start — the file watcher covers only directories that existed at session
+  start. The file is written, the agent is not found. (Trap 12)
 - Auto-memory (`MEMORY.md`) is silently truncated at 200 lines / 25,000
   characters — measured, including the fact that the tool's internal name
   for the limit says "bytes" and means characters. (Trap 13)
+
+Knowing them is not the same as being safe from them: in the source
+corpus, two of these traps were hit *while the warning stood verbatim in
+the session's own brief*. Knowledge does not survive contact with
+autopilot; mechanical checks do — which is why every entry here ends in a
+guard, not in a reminder.
 
 Full catalog (also the file the skill installs):
 **[plugin/skills/tool-traps/SKILL.md](plugin/skills/tool-traps/SKILL.md)**.

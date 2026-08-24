@@ -96,14 +96,22 @@ Bau dieses Repositories im eigenen Auftrags-Briefing gefunden wurde:
 jede mit Symptom, Mechanismus, Verifikationsdatum und dem Guard dagegen.
 Keine erdachten Risiken. Drei Kostproben:
 
-- `git grep -E 'foo\s*\('` findet **still nichts** — POSIX-ERE kennt kein
-  `\s`. Eine darauf gebaute Prüfung bleibt für immer grün. (Falle 5)
-- `npm run build > log 2>&1; echo "EXIT=$?"` druckt den richtigen Code —
-  und meldet Harness und CI den Exit 0 des `echo`. (Falle 2)
+- `description: Use when: always` ist ein harter YAML-Parse-Fehler: Der
+  Agent ist danach schlicht weg („Agent type not found"), der Skill wird
+  zum Zombie — lebendig per Slash-Kommando, tot im Auto-Trigger. (Falle 11)
+- Ein *mitten in der Session* angelegtes Agents-Verzeichnis bleibt bis zum
+  nächsten Start unsichtbar — der Dateiwächter kennt nur Verzeichnisse, die
+  es beim Sessionstart gab. Die Datei liegt da, der Agent fehlt. (Falle 12)
 - Das Auto-Memory (`MEMORY.md`) wird bei 200 Zeilen / 25.000 Zeichen still
   abgeschnitten — gemessen, einschließlich des Umstands, dass die Doku
   „25KB" sagt und der interne Name des Limits „Bytes", gemeint sind
   Zeichen. (Falle 13)
+
+Sie zu kennen ist nicht dasselbe, wie vor ihnen sicher zu sein: Im
+Quell-Korpus wurden zwei dieser Fallen getreten, *während die Warnung
+wörtlich im Briefing der Session stand*. Wissen überlebt den Kontakt mit
+dem Autopiloten nicht; mechanische Prüfungen tun es — deshalb endet hier
+jeder Eintrag mit einem Guard, nicht mit einer Ermahnung.
 
 Vollständiger Katalog (zugleich die Datei, die der Skill installiert):
 **[plugin/skills/tool-traps/SKILL.md](plugin/skills/tool-traps/SKILL.md)**
