@@ -194,7 +194,9 @@ method to itself, in CI, on every push:
   refuses to go green while any catalog entry is neither probed nor
   explained. Its output is that list, so this README does not keep a second
   copy of it — and if a trap ever stops reproducing, the guard goes red on
-  purpose. That is the catalog asking to be re-verified, not a broken build.
+  purpose. That is the catalog asking to be re-verified, not a broken build;
+  it has already falsified two of its own entries that way, [with the
+  measurements](docs/what-the-numbers-say.md).
 
 All three<!-- count:guards --> guards run their **counter-test first**
 (`--self-test`): each proves it *can* go red before its green is accepted. A

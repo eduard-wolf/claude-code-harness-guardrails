@@ -141,6 +141,31 @@ stated and whose fragile rows an independent reproduction could not confirm.
 All five are fixed; the error class survives: **a number from a document is
 a claim — including the documents in this repository.**
 
+Then a guard began finding them without being asked. `verify-traps.mjs`
+re-runs the catalog's own claims on every push. Two entries did not survive
+it:
+
+- **Trap 5 was true where it had been measured and false one runner away.**
+  Found by the guard's first run against a host it was not written on. The
+  entry said `\s`, `\b` and `\d` all "silently match nothing", under a
+  macOS stamp. Over the same fixture: macOS with git 2.50.1 gives 0 hits and
+  exit 1 for all three; ubuntu-latest with git 2.55.0 and glibc gives `\s` 1
+  hit at exit 0, `\b` 1 hit at exit 0, and `\d` 0 hits at exit 1. The entry
+  had understated its own trap: the check does not fail everywhere; it
+  changes its verdict with the machine. Corrected in `2ac3400`.
+- **Trap 1 printed the trap form inside its own guard sentence.** The remedy
+  the entry named was `for f in ${(f)$(...)}`. On zsh 5.9 that yields one
+  element with the newlines collapsed into spaces, where `${(f)"$(...)"}`
+  yields three. The rule the sentence stated was right; the example beside
+  it was the trap. This probe needs zsh, which the Linux runner does not
+  have, so the finding came from a local run. Corrected in `220828b`. That
+  makes two entries in this catalog whose guard rebuilt what the entry
+  teaches: the first was caught by a reviewer reading, this one by a probe
+  running.
+
+Neither was found by reading. Both were found by machinery that re-runs the
+claims, one of them on a host the author does not control.
+
 ## Provenance
 
 | Number | Source | Population |

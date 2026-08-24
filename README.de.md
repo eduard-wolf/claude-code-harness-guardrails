@@ -205,7 +205,9 @@ die eigene Methode auf sich selbst an, in CI, bei jedem Push:
   geprüft noch erklärt ist. Seine Ausgabe ist diese Liste, deshalb führt
   diese README keine zweite Kopie davon — und reproduziert eine Falle einmal
   nicht mehr, wird der Guard absichtlich rot. Das ist der Katalog, der um
-  Nachprüfung bittet, kein kaputter Build.
+  Nachprüfung bittet, kein kaputter Build; zwei eigene Einträge hat er auf
+  diesem Weg bereits widerlegt, [mit den
+  Messwerten](docs/what-the-numbers-say.md) (englisch).
 
 Alle drei<!-- count:guards --> Guards fahren zuerst ihre **Gegenprobe**
 (`--self-test`): Jeder beweist, dass er rot werden *kann*, bevor sein Grün
