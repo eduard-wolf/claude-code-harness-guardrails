@@ -84,9 +84,9 @@ evidence it earned its place:
    here, that keeps good ideas from being silently built or silently lost.
 7. **Trap catalog.** Only traps actually hit, with mechanisms. Two corpus
    findings temper it: two catalogued traps were hit while the session's own
-   brief carried the warning, one of them in three separate sessions
-   (warnings shorten diagnosis; they do not prevent the misstep), and
-   emphasis inflates — see "What turned out to be ritual".
+   brief carried the warning word for word, one of them in three separate
+   sessions (warnings shorten diagnosis; they do not prevent the misstep),
+   and emphasis inflates — see "What turned out to be ritual".
 8. **Context budget as a construction parameter.** The rule that ended
    overflows in the corpus: one session introduces at most
    one new mechanism and a bounded volume of new content; the seam for a

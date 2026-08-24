@@ -188,9 +188,18 @@ die eigene Methode auf sich selbst an, in CI, bei jedem Push:
   `(Falle 11)<!-- trap-ref: 11 YAML -->` muss weiterhin auf den Eintrag
   zeigen, den es nennt, und ein unmarkierter Verweis ist ebenfalls rot, so
   dass eine Umnummerierung die Prosa nicht still falsch stehen lassen kann.
-  Dazu hält er eine unmarkierte Invariante: so viele `**Guard:**`-Zeilen im
-  Katalog wie Einträge. Erst das macht „jeder Eintrag endet mit einem
-  Guard“ zu einer Messung statt zu einem Versprechen. Die Korpus-Zahlen
+  Dazu hält er vier<!-- count:catalog-checks --> unmarkierte Prüfungen:
+  zwei Versprechen, die der Katalog über sich selbst macht, je von beiden
+  Seiten gemessen. Jeder Eintrag endet in einer *eigenen*
+  `**Guard:**`-Zeile, und die Gesamtzahl stimmt mit der Eintragszahl
+  überein; jeder Eintrag trägt eine Stempelzeile, *und* die trägt ein
+  Datum. Erst das macht „jeder Eintrag endet mit einem Guard“ und „jeder
+  Eintrag trägt ein Verifikationsdatum“ zu Messungen statt zu Versprechen.
+  Die Pro-Eintrag-Hälften sind nicht überflüssig: Eine reine Gesamtzahl
+  bleibt gerade, während ein Eintrag in nichts endet und sein Nachbar in
+  zwei — genau das hat ein feindseliger Review vorgeführt, in Grün. Dieser
+  Satz sagte „eine Invariante“ und blieb bei eins, als die zweite dazukam;
+  jetzt ist die Zahl markiert wie jede andere hier. Die Korpus-Zahlen
   (85 Briefings, 262 Dateien, Zeilenzahlen) sind historische Messungen mit
   Datum und ohne Maschine — bewusst unmarkiert, weil keine Datei dieses
   Repositories sie nachmessen kann.
@@ -262,7 +271,9 @@ stehen in [docs/what-the-numbers-say.md](docs/what-the-numbers-say.md)
 (englisch), das Muster und der Vergleich zu Anthropics Harness-Literatur
 in [docs/method.md](docs/method.md) (englisch).
 
-Fallen-Verifikationen sind datiert (letzter voller Durchgang: 2026-08-21),
+Fallen-Verifikationen sind datiert (letzter Durchgang über den ganzen
+Katalog: 2026-08-21; einzelne Einträge tragen spätere Daten, wo sie seither
+neu gemessen wurden),
 und die Teilmenge, die ein Linux-Runner reproduzieren kann, wird bei jedem
 Push in CI nachgefahren — der Rest wird dort benannt statt angenommen.
 Werkzeuge ändern sich; reproduziert eine Falle mit deiner Version nicht

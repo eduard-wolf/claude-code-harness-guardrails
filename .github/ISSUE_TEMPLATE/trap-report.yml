@@ -8,7 +8,10 @@ body:
       value: |
         Every entry in the catalog carries a verification date and the environment it
         was stamped on. Tools change, and an entry that was true where it was measured
-        can be false one machine away — that has already happened twice here.
+        can be false one machine away — that has already happened here: two entries
+        have been falsified by their own probes, one of them on a runner the author
+        does not control, the other locally because its probe needs a shell that
+        runner has none of.
 
         An issue with a repro beats an issue with an opinion, so this form asks for the
         command line rather than for an impression. Nothing below is required reading

@@ -105,7 +105,11 @@ const CATALOG = 'plugin/skills/tool-traps/SKILL.md';
 
 // Files whose prose may state claims about the catalog. Deliberately not
 // examples/: the worked example numbers its own ESLint traps, which are not
-// catalog entries.
+// catalog entries. docs/ is the other case, and it is worth saying plainly
+// rather than leaving it to look deliberate: it is out of reach, not out of
+// scope. docs/method.md counts the sections of a file in this repository with
+// no marker and no register behind it — this guard's own error class, sitting
+// one directory outside its reach.
 const PROSE_FILES = ['README.md', 'README.de.md'];
 
 // Registers: name -> function measuring the sources. `traps` and `trap-groups`
@@ -116,12 +120,18 @@ const REGISTERS = {
   traps: (c, src) => c.entries.length,
   'trap-groups': (c, src) => c.groups.length,
   guards: (c, src) => src.guardFiles.length,
+  // The guard counting itself. The READMEs describe how many unmarked checks
+  // this file holds; that sentence said "one" from the day it was written
+  // until the day a second one arrived, and nothing noticed. Now the number
+  // reads the branch list.
+  'catalog-checks': (c, src) => Object.keys(BRANCHES).filter(k => k.startsWith('catalog-')).length,
 };
 
 // Every error this guard can raise. The self-test refuses to pass while one of
 // these has no counter-test, so the list cannot quietly grow past its proof.
 const BRANCHES = {
   'catalog-guard-count': 'catalog has a different number of **Guard:** lines than entries',
+  'catalog-guard-missing': 'a catalog entry that ends in no **Guard:** line of its own',
   'catalog-stamp-missing': 'a catalog entry carrying no verification stamp line at all',
   'catalog-stamp-undated': 'a catalog entry whose stamp line carries no date',
   'marker-malformed': 'a comment starts like one of our markers but does not match its form',
@@ -155,7 +165,9 @@ const COUNT_TOKEN = /(?:\*\*)?([A-Za-zÄÖÜäöüß]+|\d+)(?:\*\*)?\s*$/;
 // carries its date on that same line. `**Re-measured` and `**Version note` are
 // deliberately not stamps — they annotate an entry that must already have one.
 const STAMP = /^\*\*(?:Verified|Measured)\b/;
-const STAMP_DATE = /\b\d{4}-\d{2}(?:-\d{2})?\b/;
+// A date, not merely its shape. The loose form accepted `1200-08` — a line
+// range — as a verification date, which a review demonstrated.
+const STAMP_DATE = /\b(?:19|20)\d{2}-(?:0[1-9]|1[0-2])(?:-(?:0[1-9]|[12]\d|3[01]))?\b/;
 const REFERENCE = /\((?:Trap|Falle)\s+(\d+)\)/g;
 const REF_BEHIND = /^\s*<!--\s*trap-ref\s*:\s*(\d+)\b/;
 
@@ -185,7 +197,7 @@ function parseCatalog(text) {
   lf(text).split('\n').forEach((line, i) => {
     if (/^\s*```/.test(line)) { inFence = !inFence; return; }
     if (inFence) return;
-    if (/^\*\*Guard:\*\*/.test(line)) { guards++; return; }
+    if (/^\*\*Guard:\*\*/.test(line)) { guards++; if (open) open.guards++; return; }
     if (open && STAMP.test(line)) {
       open.stamps++;
       if (STAMP_DATE.test(line)) open.dated++;
@@ -194,7 +206,7 @@ function parseCatalog(text) {
     const h = /^## (?:(\d+)\)\s*)?(.*)$/.exec(line);
     if (!h) return;
     if (h[1]) {
-      open = { n: Number(h[1]), title: h[2].trim(), line: i + 1, stamps: 0, dated: 0 };
+      open = { n: Number(h[1]), title: h[2].trim(), line: i + 1, guards: 0, stamps: 0, dated: 0 };
       entries.push(open);
     } else {
       open = null;
@@ -217,10 +229,19 @@ function check(src) {
     fail('catalog-guard-count', `${CATALOG}: ${catalog.entries.length} entr(ies) but ${catalog.guards} "**Guard:**" line(s) — "every entry ends in a guard" is false`);
   }
 
+  // A file-wide tally is not the promise. Moving one entry's guard paragraph
+  // into its neighbour keeps 15 = 15 while an entry ends in nothing; a review
+  // did exactly that and watched all three guards stay green.
+  for (const e of catalog.entries) {
+    if (e.guards === 0) {
+      fail('catalog-guard-missing', `${CATALOG}: entry ${e.n} ends in no "**Guard:**" line of its own — the file-wide tally can still come out even while one entry ends in nothing and another ends in two`);
+    }
+  }
+
   // The other one, per entry so the red names the entry to repair.
   for (const e of catalog.entries) {
     if (e.stamps === 0) {
-      fail('catalog-stamp-missing', `${CATALOG}: entry ${e.n} carries no "**Verified…" or "**Measured…" line — "every trap carries a verification date and environment" is false for it`);
+      fail('catalog-stamp-missing', `${CATALOG}: entry ${e.n} carries no "**Verified…" or "**Measured…" line — nothing here dates it`);
     } else if (e.dated === 0) {
       fail('catalog-stamp-undated', `${CATALOG}: entry ${e.n} has a stamp line but no YYYY-MM or YYYY-MM-DD date on it — an undated stamp is the next stale claim`);
     }
@@ -352,11 +373,41 @@ const COUNTER_TESTS = [
   { expect: 'catalog-guard-count', name: 'one "**Guard:**" line removed from the catalog',
     mutate: src => inCatalog(src, /^\*\*Guard:\*\*.*$/m, '') },
 
+  // Totals unchanged, one entry stripped: the counter-test for the hole a
+  // whole-file tally cannot see.
+  { expect: 'catalog-guard-missing', name: "one entry's guard line moved into its neighbour, totals unchanged",
+    mutate: src => {
+      const out = copyOf(src);
+      const first = /^\*\*Guard:\*\*.*$/m.exec(out.catalog);
+      const all = [...out.catalog.matchAll(/^\*\*Guard:\*\*.*$/gm)];
+      if (!first || all.length < 2) return { src: out, applied: false };
+      const last = all[all.length - 1];
+      let text = out.catalog.slice(0, last.index) + out.catalog.slice(last.index + last[0].length);
+      text = text.slice(0, first.index) + first[0] + '\n' + text.slice(first.index);
+      out.catalog = text;
+      return { src: out, applied: true };
+    } },
+
   { expect: 'catalog-stamp-missing', name: 'one stamp line removed from the catalog',
     mutate: src => inCatalog(src, /^\*\*(?:Verified|Measured)\b.*$/m, '') },
 
   { expect: 'catalog-stamp-undated', name: 'the date taken out of a stamp line',
     mutate: src => inCatalog(src, /^(\*\*(?:Verified|Measured)\b.*?)\b\d{4}-\d{2}(?:-\d{2})?\b/m, '$1') },
+
+  // Proves the attribution rule the parser claims: a stamp under a group
+  // heading belongs to no entry, so it cannot cover the entry below it.
+  { expect: 'catalog-stamp-missing', name: 'a stamp moved out of its entry into the group intro above it',
+    mutate: src => {
+      const out = copyOf(src);
+      const stamp = /^\*\*(?:Verified|Measured)\b.*$/m.exec(out.catalog);
+      if (!stamp) return { src: out, applied: false };
+      let text = out.catalog.slice(0, stamp.index) + out.catalog.slice(stamp.index + stamp[0].length);
+      const group = /^## (?!\d+\))(.*)$/m.exec(text);
+      if (!group || group.index > stamp.index) return { src: out, applied: false };
+      const at = group.index + group[0].length;
+      out.catalog = text.slice(0, at) + '\n\n' + stamp[0] + text.slice(at);
+      return { src: out, applied: true };
+    } },
 
   { expect: 'marker-malformed', name: 'a marker with its prefix but no payload',
     mutate: src => inFirstProse(src, /<!--\s*trap-ref:[^>]*-->/, '<!-- trap-ref: -->') },

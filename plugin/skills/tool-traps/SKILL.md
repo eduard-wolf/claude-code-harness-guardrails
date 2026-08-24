@@ -27,6 +27,17 @@ Environment for the "verified locally" stamps below, unless an entry states
 its own: macOS 26.0.1, git 2.50.1,
 zsh 5.9 (arm64), bash 3.2.57, node 24.3.0, Claude Code 2.1.238 — 2026-08-21.
 
+The `**Measured in the source corpus**` stamps carry a date and a document
+instead of a host — "result report AA-7, 2026-08-13" and the like. **Those
+documents are not published**, because the corpus is the working record of a
+live product; naming them is provenance, not something you can audit. Such
+an entry also names no OS, shell or tool version unless it states one
+itself — the default above reaches only the "verified locally" stamps. For
+those entries "and environment" in rule 2 is a promise this catalog does not
+keep, and saying so beats inventing a version string. What you can check
+without taking anyone's word is the half CI re-runs, and its output names
+the rest by number.
+
 ---
 
 ## Shell
@@ -142,7 +153,7 @@ for a measurement, and went *permanently red* — a guard that always fires
 is switched off as fast as one that never fires, so which way the zero
 falls is luck rather than safety. (The first published version of this
 entry had that backwards, as "reported every module clean"; the report says
-red.) The brief for that session carried the warning about exactly this
+red.) The brief for that session carried the warning word for word
 (result report AA-7, 2026-08-13), and two later sessions hit it with the
 warning standing in their own briefs too (AA-12, 2026-08-15, three times in
 one slice; AA-15, 2026-08-17, attested in the brief AA-15 wrote for its

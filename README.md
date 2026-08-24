@@ -178,9 +178,16 @@ method to itself, in CI, on every push:
   trap reference here. A `(Trap 11)<!-- trap-ref: 11 YAML -->` still has to point at the entry
   it names, and a reference left unmarked is red as
   well, so renumbering the catalog cannot leave the prose quietly wrong.
-  On top of that it holds one unmarked invariant: as many `**Guard:**`
-  lines in the catalog as entries, which is what makes "every entry here
-  ends in a guard" a measurement rather than a promise. The corpus figures
+  On top of that it holds four<!-- count:catalog-checks --> unmarked
+  checks: two promises the catalog makes about itself, each measured from
+  both sides. Every entry ends in a `**Guard:**` line *of its own* and the
+  file-wide tally matches the entry count; every entry carries a stamp line
+  *and* that line carries a date. The per-entry halves are not redundant —
+  a tally alone stays even while one entry ends in nothing and its
+  neighbour ends in two, which a hostile review demonstrated in green
+  before that half existed. This sentence used to say "one unmarked
+  invariant", stayed at one when a second arrived, and is now a marked
+  count like every other number here. The corpus figures
   (85 briefs, 262 files, line counts) are historical measurements with a
   date and no machine, deliberately unmarked, because no file in this
   repository can re-measure them.
@@ -246,8 +253,9 @@ stated limits: it separates self-report from external finding; it does not
 resolve the ambiguity. The pattern and its comparison to Anthropic's
 harness literature are in [docs/method.md](docs/method.md).
 
-Trap verifications are dated (last full pass: 2026-08-21), and the subset a
-Linux runner can reproduce is re-run in CI on every push, with the rest
-named there rather than assumed. Tools change; if a trap no longer
+Trap verifications are dated (last sweep of the whole catalog: 2026-08-21;
+individual entries carry later dates where they were re-measured since),
+and the subset a Linux runner can reproduce is re-run in CI on every push,
+with the rest named there rather than assumed. Tools change; if a trap no longer
 reproduces on your version, that is a finding — an issue with a repro beats
 an issue with an opinion.
