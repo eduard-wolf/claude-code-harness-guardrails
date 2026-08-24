@@ -11,7 +11,11 @@ Three rules for using this catalog:
    this maintainer's machine, or both. No brainstormed risks.
 2. **Every trap carries a verification date and environment.** Tools change;
    a trap without a date is the next stale claim. If your version behaves
-   differently, the catalog is wrong for you — re-verify, then rely.
+   differently, the catalog is wrong for you — re-verify, then rely. In the
+   source repository, CI re-runs every trap whose mechanism exists on a Linux
+   runner at each push — trap form first, then the guard printed for it — and
+   names the rest with number and reason, so its output, not this date, tells
+   you which of these entries were measured most recently and where.
 3. **Being warned is not enough.** In the source corpus, two traps were hit
    *while the warning stood verbatim in the session's own brief*. The guard
    column exists because knowledge does not survive contact with autopilot;

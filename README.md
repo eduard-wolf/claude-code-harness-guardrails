@@ -180,10 +180,25 @@ method to itself, in CI, on every push:
   a guard" a measurement rather than a promise. The corpus figures (85 briefs, 262 files, line counts) are
   historical measurements with a date and no machine — deliberately
   unmarked, because no file in this repository can re-measure them.
+- **[guards/verify-traps.mjs](guards/verify-traps.mjs)** — the dates on the
+  trap catalog stop being a promise. On every push the runner re-runs each
+  trap whose mechanism exists on a Linux host: first the form that springs
+  the trap, then the guard the entry itself prescribes against it — and an
+  entry counts as verified only when the two come out differently, because a
+  probe that cannot tell a trap from its remedy has measured neither. What
+  the runner cannot host is not quietly dropped. Traps that live inside the
+  Claude Code harness, one that would need a test runner installed, one that
+  only shows itself across a series of pushes, any whose shell or interpreter
+  that host does not carry: each is named with its number and the reason it
+  was not run, and the guard refuses to go green while any catalog entry is
+  neither probed nor explained. Its output is that list, so this README does
+  not keep a second copy of it — and if a trap ever stops reproducing, the
+  guard goes red on purpose. That is the catalog asking to be re-verified,
+  not a broken build.
 
-Both guards run their **counter-test first** (`--self-test`): each proves it
-*can* go red before its green is accepted. A guard without a counter-test is
-a claim.
+All three guards run their **counter-test first** (`--self-test`): each
+proves it *can* go red before its green is accepted. A guard without a
+counter-test is a claim.
 
 <!-- section: provenance -->
 ## Where the numbers come from
@@ -226,6 +241,8 @@ ambiguity — are in
 and its comparison to Anthropic's harness literature are in
 [docs/method.md](docs/method.md).
 
-Trap verifications are dated (last full pass: 2026-08-21). Tools change; if
-a trap no longer reproduces on your version, that is a finding — an issue
-with a repro beats an issue with an opinion.
+Trap verifications are dated (last full pass: 2026-08-21), and the subset a
+Linux runner can reproduce is re-run in CI on every push, with the rest
+named there rather than assumed. Tools change; if a trap no longer
+reproduces on your version, that is a finding — an issue with a repro beats
+an issue with an opinion.

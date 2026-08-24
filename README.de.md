@@ -189,8 +189,24 @@ die eigene Methode auf sich selbst an, in CI, bei jedem Push:
   Guard" zu einer Messung statt zu einem Versprechen. Die Korpus-Zahlen (85 Briefings, 262 Dateien, Zeilenzahlen)
   sind historische Messungen mit Datum und ohne Maschine — bewusst
   unmarkiert, weil keine Datei dieses Repositories sie nachmessen kann.
+- **[guards/verify-traps.mjs](guards/verify-traps.mjs)** — die Daten am
+  Fallen-Katalog hören auf, ein Versprechen zu sein. Bei jedem Push fährt der
+  Runner jede Falle nach, deren Mechanismus auf einem Linux-Host existiert:
+  erst die Form, die die Falle auslöst, dann das Gegenmittel, das der Eintrag
+  selbst dagegen nennt — und verifiziert ist ein Eintrag erst, wenn beide
+  verschieden ausgehen, denn eine Probe, die Falle und Gegenmittel nicht
+  unterscheiden kann, hat keines von beiden gemessen. Was der Runner nicht
+  beherbergt, fällt nicht still weg. Fallen, die im Claude-Code-Harness
+  leben, eine, die eine Test-Runner-Installation bräuchte, eine, die sich
+  erst über eine Reihe von Pushes zeigt, und alle, deren Shell oder
+  Interpreter dieser Host nicht mitbringt: Jede wird mit Nummer und Grund
+  benannt, und der Guard wird nicht grün, solange ein Katalogeintrag weder
+  geprüft noch erklärt ist. Seine Ausgabe
+  ist diese Liste, deshalb führt diese README keine zweite Kopie davon — und
+  reproduziert eine Falle einmal nicht mehr, wird der Guard absichtlich rot.
+  Das ist der Katalog, der um Nachprüfung bittet, kein kaputter Build.
 
-Beide Guards fahren zuerst ihre **Gegenprobe** (`--self-test`): Jeder
+Alle drei Guards fahren zuerst ihre **Gegenprobe** (`--self-test`): Jeder
 beweist, dass er rot werden *kann*, bevor sein Grün zählt. Ein Guard ohne
 Gegenprobe ist eine Behauptung.
 
@@ -236,7 +252,9 @@ stehen in [docs/what-the-numbers-say.md](docs/what-the-numbers-say.md)
 (englisch), das Muster und der Vergleich zu Anthropics Harness-Literatur
 in [docs/method.md](docs/method.md) (englisch).
 
-Fallen-Verifikationen sind datiert (letzter voller Durchgang: 2026-08-21).
+Fallen-Verifikationen sind datiert (letzter voller Durchgang: 2026-08-21),
+und die Teilmenge, die ein Linux-Runner reproduzieren kann, wird bei jedem
+Push in CI nachgefahren — der Rest wird dort benannt statt angenommen.
 Werkzeuge ändern sich; reproduziert eine Falle auf deiner Version nicht
 mehr, ist das ein Befund — ein Issue mit Repro schlägt ein Issue mit
 Meinung.
